@@ -1,0 +1,128 @@
+{
+  "filter_log": {
+    "rows_raw": 1150,
+    "duplicates_removed": 0,
+    "out_of_physical_range": {
+      "lst": 0,
+      "ndvi": 0,
+      "tvdi": 0,
+      "luong_mua": 0,
+      "do_am_dat": 0
+    },
+    "lst_missing_before_outlier": 36,
+    "statistical_outliers_flagged": 8,
+    "statistical_outliers_by_split": {
+      "train": 2,
+      "val": 3,
+      "test": 3
+    },
+    "mad_threshold_resid_degC": 1.96,
+    "labels_dropped_train_val": 5,
+    "rows_after_lag_dropna": 1130,
+    "split_rows": {
+      "train": 670,
+      "val": 230,
+      "test": 230
+    },
+    "test_rows_with_observed_lst": 222
+  },
+  "model_info": {
+    "Persistence": {
+      "val_RMSE": 1.1069312873886978
+    },
+    "Climatology": {
+      "val_RMSE": 0.7498296264819094
+    },
+    "Ridge": {
+      "best_params": {
+        "alpha": 100
+      },
+      "val_RMSE": 0.6428661362406376,
+      "importances": null
+    },
+    "Random Forest": {
+      "best_params": {
+        "n_estimators": 300,
+        "max_depth": 6,
+        "min_samples_leaf": 3,
+        "random_state": 42
+      },
+      "val_RMSE": 0.7162229882909064,
+      "importances": {
+        "kinh_do": 0.00013788804381944592,
+        "vi_do": 0.00016427306884269054,
+        "lag1": 0.002762174135671731,
+        "lag2": 0.001758036518594344,
+        "roll3": 0.0013980761141440274,
+        "lag1_missing": 1.4049127897438151e-05,
+        "ms": 4.148100606968928e-05,
+        "mc": 4.168320180835502e-05,
+        "ds": 0.0013848141264584499,
+        "dc": 0.0008336462482800891,
+        "clim": 0.986639870705289,
+        "ndvi": 0.0014648144327930616,
+        "luong_mua": 0.0016715862145729355,
+        "do_am_dat": 0.001618814096583344,
+        "lc_Cong_nghiep": 3.119272596594003e-05,
+        "lc_Do_thi_dac": 1.0025020892977476e-05,
+        "lc_Do_thi_thua": 1.918335379430476e-06,
+        "lc_Mat_nuoc_cay_xanh": 1.1075952195983824e-05,
+        "lc_Nong_nghiep": 1.4166602868011451e-05,
+        "lc_Rung_ngap_man": 4.1432187310087653e-07
+      }
+    },
+    "HistGradientBoosting": {
+      "best_params": {
+        "learning_rate": 0.03,
+        "max_depth": 3,
+        "max_iter": 300,
+        "l2_regularization": 1.0,
+        "random_state": 42
+      },
+      "val_RMSE": 0.7010708484441008,
+      "importances": null
+    }
+  },
+  "best_model": "Ridge",
+  "tvdi_ablation": {
+    "Random Forest": {
+      "without_TVDI_RMSE": 0.7171989782428605,
+      "with_TVDI_RMSE": 0.7196826427876772
+    },
+    "HistGradientBoosting": {
+      "without_TVDI_RMSE": 0.7141690911720046,
+      "with_TVDI_RMSE": 0.7112103666209834
+    }
+  },
+  "skipped": {
+    "XGBoost": "thiếu thư viện (ModuleNotFoundError)",
+    "ARIMA": "thiếu thư viện (ModuleNotFoundError)",
+    "GCN-LSTM": "thiếu thư viện (ImportError)"
+  },
+  "features": [
+    "kinh_do",
+    "vi_do",
+    "lag1",
+    "lag2",
+    "roll3",
+    "lag1_missing",
+    "ms",
+    "mc",
+    "ds",
+    "dc",
+    "clim",
+    "ndvi",
+    "luong_mua",
+    "do_am_dat",
+    "lc_Cong_nghiep",
+    "lc_Do_thi_dac",
+    "lc_Do_thi_thua",
+    "lc_Mat_nuoc_cay_xanh",
+    "lc_Nong_nghiep",
+    "lc_Rung_ngap_man"
+  ],
+  "split": {
+    "train_end": "2023-12-31",
+    "val_end": "2024-12-31"
+  }
+}
