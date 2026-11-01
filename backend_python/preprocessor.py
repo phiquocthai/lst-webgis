@@ -17,16 +17,20 @@ class LSTPreprocessor:
     def __init__(
         self,
         missing_strategy: str = "interpolate",  # 'interpolate', 'drop', 'mean'
-        outlier_strategy: str = "iqr",          # 'iqr', 'z_score', 'clip', 'none'
+        outlier_strategy: str = "iqr",          # 'iqr', 'z_score', 'threshold', 'nguong_hop_ly', 'clip', 'none'
         norm_method: str = "min_max",           # 'min_max', 'z_score', 'none'
         train_end_date: str = "2023-12-31",
-        val_end_date: str = "2024-12-31"
+        val_end_date: str = "2024-12-31",
+        lower_bound: float = 15.0,
+        upper_bound: float = 60.0
     ):
         self.missing_strategy = missing_strategy
         self.outlier_strategy = outlier_strategy
         self.norm_method = norm_method
         self.train_end_date = train_end_date
         self.val_end_date = val_end_date
+        self.lower_bound = float(lower_bound)
+        self.upper_bound = float(upper_bound)
         self.scaler_params = {}
 
     def handle_missing(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, Any]]:
@@ -59,7 +63,12 @@ class LSTPreprocessor:
         outliers_detected = 0
         s = df['gia_tri_lst'].dropna()
         
-        if self.outlier_strategy == "iqr":
+        if self.outlier_strategy in ["threshold", "nguong_hop_ly", "physical"]:
+            outlier_mask = (df['gia_tri_lst'] < self.lower_bound) | (df['gia_tri_lst'] > self.upper_bound)
+            outliers_detected = int(outlier_mask.sum())
+            df.loc[df['gia_tri_lst'] < self.lower_bound, 'gia_tri_lst'] = self.lower_bound
+            df.loc[df['gia_tri_lst'] > self.upper_bound, 'gia_tri_lst'] = self.upper_bound
+        elif self.outlier_strategy == "iqr":
             q1 = s.quantile(0.25)
             q3 = s.quantile(0.75)
             iqr = q3 - q1

@@ -79,8 +79,14 @@ export default function Landing({ onEnter, currentUser, setCurrentUser }) {
 
         <nav className="lp-nav">
           <button onClick={() => onEnter('gis')}>Bản đồ</button>
-          <button onClick={() => onEnter('training')}>Mô hình AI</button>
-          <button onClick={() => onEnter('datasets')}>Dữ liệu</button>
+          <button onClick={() => onEnter('timeseries')}>Chuỗi thời gian</button>
+          <button onClick={() => onEnter('statistics')}>Thống kê</button>
+          {currentUser?.vai_tro === 'ADMIN' && (
+            <>
+              <button onClick={() => onEnter('training')}>Mô hình AI</button>
+              <button onClick={() => onEnter('datasets')}>Dữ liệu</button>
+            </>
+          )}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -90,10 +96,19 @@ export default function Landing({ onEnter, currentUser, setCurrentUser }) {
                 className="lp-user-btn"
                 onClick={() => setProfileOpen(!profileOpen)}
               >
-                <div className="lp-avatar">
-                  {(currentUser.ten_dang_nhap || 'U').substring(0, 2).toUpperCase()}
+                <div
+                  className="lp-avatar"
+                  style={{
+                    backgroundColor: currentUser.vai_tro === 'ADMIN' ? '#ef4444' : '#0284c7',
+                    color: '#ffffff',
+                    fontWeight: 700
+                  }}
+                >
+                  {currentUser.vai_tro === 'ADMIN' ? 'AD' : 'ND'}
                 </div>
-                <span className="lp-user-name">{currentUser.ten_dang_nhap}</span>
+                <span className="lp-user-name">
+                  {currentUser.vai_tro === 'ADMIN' ? 'Quản trị viên' : 'Người dùng'}
+                </span>
               </button>
               <UserProfilePopup
                 user={currentUser}

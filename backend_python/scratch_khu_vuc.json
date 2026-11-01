@@ -1,0 +1,1016 @@
+[
+  [
+    1,
+    "HCMC",
+    "TP. Hồ Chí Minh",
+    "THANH_PHO"
+  ],
+  [
+    2,
+    "27316",
+    "An Đông",
+    "PHUONG_XA"
+  ],
+  [
+    3,
+    "26878",
+    "An Hội Đông",
+    "PHUONG_XA"
+  ],
+  [
+    4,
+    "26882",
+    "An Hội Tây",
+    "PHUONG_XA"
+  ],
+  [
+    5,
+    "27094",
+    "An Khánh",
+    "PHUONG_XA"
+  ],
+  [
+    6,
+    "27460",
+    "An Lạc",
+    "PHUONG_XA"
+  ],
+  [
+    7,
+    "25867",
+    "An Long",
+    "PHUONG_XA"
+  ],
+  [
+    8,
+    "26876",
+    "An Nhơn",
+    "PHUONG_XA"
+  ],
+  [
+    9,
+    "27508",
+    "An Nhơn Tây",
+    "PHUONG_XA"
+  ],
+  [
+    10,
+    "25975",
+    "An Phú",
+    "PHUONG_XA"
+  ],
+  [
+    11,
+    "26767",
+    "An Phú Đông",
+    "PHUONG_XA"
+  ],
+  [
+    12,
+    "27673",
+    "An Thới Đông",
+    "PHUONG_XA"
+  ],
+  [
+    13,
+    "27592",
+    "Bà Điểm",
+    "PHUONG_XA"
+  ],
+  [
+    14,
+    "26560",
+    "Bà Rịa",
+    "PHUONG_XA"
+  ],
+  [
+    15,
+    "25906",
+    "Bắc Tân Uyên",
+    "PHUONG_XA"
+  ],
+  [
+    16,
+    "27154",
+    "Bàn Cờ",
+    "PHUONG_XA"
+  ],
+  [
+    17,
+    "25822",
+    "Bàu Bàng",
+    "PHUONG_XA"
+  ],
+  [
+    18,
+    "26638",
+    "Bàu Lâm",
+    "PHUONG_XA"
+  ],
+  [
+    19,
+    "26983",
+    "Bảy Hiền",
+    "PHUONG_XA"
+  ],
+  [
+    20,
+    "25813",
+    "Bến Cát",
+    "PHUONG_XA"
+  ],
+  [
+    21,
+    "26743",
+    "Bến Thành",
+    "PHUONG_XA"
+  ],
+  [
+    22,
+    "27637",
+    "Bình Chánh",
+    "PHUONG_XA"
+  ],
+  [
+    23,
+    "26656",
+    "Bình Châu",
+    "PHUONG_XA"
+  ],
+  [
+    24,
+    "25915",
+    "Bình Cơ",
+    "PHUONG_XA"
+  ],
+  [
+    25,
+    "27424",
+    "Bình Đông",
+    "PHUONG_XA"
+  ],
+  [
+    26,
+    "25760",
+    "Bình Dương",
+    "PHUONG_XA"
+  ],
+  [
+    27,
+    "26590",
+    "Bình Giã",
+    "PHUONG_XA"
+  ],
+  [
+    28,
+    "25987",
+    "Bình Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    29,
+    "27619",
+    "Bình Hưng",
+    "PHUONG_XA"
+  ],
+  [
+    30,
+    "27439",
+    "Bình Hưng Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    31,
+    "27667",
+    "Bình Khánh",
+    "PHUONG_XA"
+  ],
+  [
+    32,
+    "27610",
+    "Bình Lợi",
+    "PHUONG_XA"
+  ],
+  [
+    33,
+    "26905",
+    "Bình Lợi Trung",
+    "PHUONG_XA"
+  ],
+  [
+    34,
+    "27544",
+    "Bình Mỹ",
+    "PHUONG_XA"
+  ],
+  [
+    35,
+    "27364",
+    "Bình Phú",
+    "PHUONG_XA"
+  ],
+  [
+    36,
+    "26911",
+    "Bình Quới",
+    "PHUONG_XA"
+  ],
+  [
+    37,
+    "27442",
+    "Bình Tân",
+    "PHUONG_XA"
+  ],
+  [
+    38,
+    "27367",
+    "Bình Tây",
+    "PHUONG_XA"
+  ],
+  [
+    39,
+    "26929",
+    "Bình Thạnh",
+    "PHUONG_XA"
+  ],
+  [
+    40,
+    "27232",
+    "Bình Thới",
+    "PHUONG_XA"
+  ],
+  [
+    41,
+    "27373",
+    "Bình Tiên",
+    "PHUONG_XA"
+  ],
+  [
+    42,
+    "27448",
+    "Bình Trị Đông",
+    "PHUONG_XA"
+  ],
+  [
+    43,
+    "27097",
+    "Bình Trưng",
+    "PHUONG_XA"
+  ],
+  [
+    44,
+    "27664",
+    "Cần Giờ",
+    "PHUONG_XA"
+  ],
+  [
+    45,
+    "27112",
+    "Cát Lái",
+    "PHUONG_XA"
+  ],
+  [
+    46,
+    "27058",
+    "Cầu Kiệu",
+    "PHUONG_XA"
+  ],
+  [
+    47,
+    "26758",
+    "Cầu Ông Lãnh",
+    "PHUONG_XA"
+  ],
+  [
+    48,
+    "25771",
+    "Chánh Hiệp",
+    "PHUONG_XA"
+  ],
+  [
+    49,
+    "27418",
+    "Chánh Hưng",
+    "PHUONG_XA"
+  ],
+  [
+    50,
+    "25837",
+    "Chánh Phú Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    51,
+    "26596",
+    "Châu Đức",
+    "PHUONG_XA"
+  ],
+  [
+    52,
+    "26728",
+    "Châu Pha",
+    "PHUONG_XA"
+  ],
+  [
+    53,
+    "27343",
+    "Chợ Lớn",
+    "PHUONG_XA"
+  ],
+  [
+    54,
+    "27301",
+    "Chợ Quán",
+    "PHUONG_XA"
+  ],
+  [
+    55,
+    "26732",
+    "Côn Đảo",
+    "PHUONG_XA"
+  ],
+  [
+    56,
+    "27553",
+    "Củ Chi",
+    "PHUONG_XA"
+  ],
+  [
+    57,
+    "26680",
+    "Đất Đỏ",
+    "PHUONG_XA"
+  ],
+  [
+    58,
+    "25777",
+    "Dầu Tiếng",
+    "PHUONG_XA"
+  ],
+  [
+    59,
+    "25942",
+    "Dĩ An",
+    "PHUONG_XA"
+  ],
+  [
+    60,
+    "27169",
+    "Diên Hồng",
+    "PHUONG_XA"
+  ],
+  [
+    61,
+    "25951",
+    "Đông Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    62,
+    "26791",
+    "Đông Hưng Thuận",
+    "PHUONG_XA"
+  ],
+  [
+    63,
+    "27568",
+    "Đông Thạnh",
+    "PHUONG_XA"
+  ],
+  [
+    64,
+    "27043",
+    "Đức Nhuận",
+    "PHUONG_XA"
+  ],
+  [
+    65,
+    "26944",
+    "Gia Định",
+    "PHUONG_XA"
+  ],
+  [
+    66,
+    "26884",
+    "Gò Vấp",
+    "PHUONG_XA"
+  ],
+  [
+    67,
+    "26890",
+    "Hạnh Thông",
+    "PHUONG_XA"
+  ],
+  [
+    68,
+    "26809",
+    "Hiệp Bình",
+    "PHUONG_XA"
+  ],
+  [
+    69,
+    "27658",
+    "Hiệp Phước",
+    "PHUONG_XA"
+  ],
+  [
+    70,
+    "26620",
+    "Hồ Tràm",
+    "PHUONG_XA"
+  ],
+  [
+    71,
+    "27211",
+    "Hòa Bình",
+    "PHUONG_XA"
+  ],
+  [
+    72,
+    "26647",
+    "Hòa Hiệp",
+    "PHUONG_XA"
+  ],
+  [
+    73,
+    "26641",
+    "Hòa Hội",
+    "PHUONG_XA"
+  ],
+  [
+    74,
+    "27163",
+    "Hòa Hưng",
+    "PHUONG_XA"
+  ],
+  [
+    75,
+    "25849",
+    "Hòa Lợi",
+    "PHUONG_XA"
+  ],
+  [
+    76,
+    "27559",
+    "Hóc Môn",
+    "PHUONG_XA"
+  ],
+  [
+    77,
+    "27628",
+    "Hưng Long",
+    "PHUONG_XA"
+  ],
+  [
+    78,
+    "27265",
+    "Khánh Hội",
+    "PHUONG_XA"
+  ],
+  [
+    79,
+    "26608",
+    "Kim Long",
+    "PHUONG_XA"
+  ],
+  [
+    80,
+    "25966",
+    "Lái Thiêu",
+    "PHUONG_XA"
+  ],
+  [
+    81,
+    "26800",
+    "Linh Xuân",
+    "PHUONG_XA"
+  ],
+  [
+    82,
+    "26833",
+    "Long Bình",
+    "PHUONG_XA"
+  ],
+  [
+    83,
+    "26659",
+    "Long Điền",
+    "PHUONG_XA"
+  ],
+  [
+    84,
+    "26662",
+    "Long Hải",
+    "PHUONG_XA"
+  ],
+  [
+    85,
+    "25792",
+    "Long Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    86,
+    "26566",
+    "Long Hương",
+    "PHUONG_XA"
+  ],
+  [
+    87,
+    "25840",
+    "Long Nguyên",
+    "PHUONG_XA"
+  ],
+  [
+    88,
+    "26857",
+    "Long Phước",
+    "PHUONG_XA"
+  ],
+  [
+    89,
+    "26545",
+    "Long Sơn",
+    "PHUONG_XA"
+  ],
+  [
+    90,
+    "26860",
+    "Long Trường",
+    "PHUONG_XA"
+  ],
+  [
+    91,
+    "27238",
+    "Minh Phụng",
+    "PHUONG_XA"
+  ],
+  [
+    92,
+    "25780",
+    "Minh Thạnh",
+    "PHUONG_XA"
+  ],
+  [
+    93,
+    "26575",
+    "Ngãi Giao",
+    "PHUONG_XA"
+  ],
+  [
+    94,
+    "26617",
+    "Nghĩa Thành",
+    "PHUONG_XA"
+  ],
+  [
+    95,
+    "27655",
+    "Nhà Bè",
+    "PHUONG_XA"
+  ],
+  [
+    96,
+    "27142",
+    "Nhiêu Lộc",
+    "PHUONG_XA"
+  ],
+  [
+    97,
+    "27511",
+    "Nhuận Đức",
+    "PHUONG_XA"
+  ],
+  [
+    98,
+    "25768",
+    "Phú An",
+    "PHUONG_XA"
+  ],
+  [
+    99,
+    "27427",
+    "Phú Định",
+    "PHUONG_XA"
+  ],
+  [
+    100,
+    "25858",
+    "Phú Giáo",
+    "PHUONG_XA"
+  ],
+  [
+    101,
+    "27541",
+    "Phú Hòa Đông",
+    "PHUONG_XA"
+  ],
+  [
+    102,
+    "27349",
+    "Phú Lâm",
+    "PHUONG_XA"
+  ],
+  [
+    103,
+    "25750",
+    "Phú Lợi",
+    "PHUONG_XA"
+  ],
+  [
+    104,
+    "26704",
+    "Phú Mỹ",
+    "PHUONG_XA"
+  ],
+  [
+    105,
+    "27073",
+    "Phú Nhuận",
+    "PHUONG_XA"
+  ],
+  [
+    106,
+    "27028",
+    "Phú Thạnh",
+    "PHUONG_XA"
+  ],
+  [
+    107,
+    "27226",
+    "Phú Thọ",
+    "PHUONG_XA"
+  ],
+  [
+    108,
+    "27022",
+    "Phú Thọ Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    109,
+    "27484",
+    "Phú Thuận",
+    "PHUONG_XA"
+  ],
+  [
+    110,
+    "26686",
+    "Phước Hải",
+    "PHUONG_XA"
+  ],
+  [
+    111,
+    "25882",
+    "Phước Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    112,
+    "26848",
+    "Phước Long",
+    "PHUONG_XA"
+  ],
+  [
+    113,
+    "26542",
+    "Phước Thắng",
+    "PHUONG_XA"
+  ],
+  [
+    114,
+    "25864",
+    "Phước Thành",
+    "PHUONG_XA"
+  ],
+  [
+    115,
+    "26536",
+    "Rạch Dừa",
+    "PHUONG_XA"
+  ],
+  [
+    116,
+    "26740",
+    "Sài Gòn",
+    "PHUONG_XA"
+  ],
+  [
+    117,
+    "26803",
+    "Tam Bình",
+    "PHUONG_XA"
+  ],
+  [
+    118,
+    "26572",
+    "Tam Long",
+    "PHUONG_XA"
+  ],
+  [
+    119,
+    "26526",
+    "Tam Thắng",
+    "PHUONG_XA"
+  ],
+  [
+    120,
+    "27496",
+    "Tân An Hội",
+    "PHUONG_XA"
+  ],
+  [
+    121,
+    "27004",
+    "Tân Bình",
+    "PHUONG_XA"
+  ],
+  [
+    122,
+    "26737",
+    "Tân Định",
+    "PHUONG_XA"
+  ],
+  [
+    123,
+    "25945",
+    "Tân Đông Hiệp",
+    "PHUONG_XA"
+  ],
+  [
+    124,
+    "26710",
+    "Tân Hải",
+    "PHUONG_XA"
+  ],
+  [
+    125,
+    "25920",
+    "Tân Hiệp",
+    "PHUONG_XA"
+  ],
+  [
+    126,
+    "26995",
+    "Tân Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    127,
+    "27475",
+    "Tân Hưng",
+    "PHUONG_XA"
+  ],
+  [
+    128,
+    "25891",
+    "Tân Khánh",
+    "PHUONG_XA"
+  ],
+  [
+    129,
+    "27487",
+    "Tân Mỹ",
+    "PHUONG_XA"
+  ],
+  [
+    130,
+    "27595",
+    "Tân Nhựt",
+    "PHUONG_XA"
+  ],
+  [
+    131,
+    "27031",
+    "Tân Phú",
+    "PHUONG_XA"
+  ],
+  [
+    132,
+    "26713",
+    "Tân Phước",
+    "PHUONG_XA"
+  ],
+  [
+    133,
+    "27007",
+    "Tân Sơn",
+    "PHUONG_XA"
+  ],
+  [
+    134,
+    "26977",
+    "Tân Sơn Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    135,
+    "26968",
+    "Tân Sơn Nhất",
+    "PHUONG_XA"
+  ],
+  [
+    136,
+    "27019",
+    "Tân Sơn Nhì",
+    "PHUONG_XA"
+  ],
+  [
+    137,
+    "27457",
+    "Tân Tạo",
+    "PHUONG_XA"
+  ],
+  [
+    138,
+    "26725",
+    "Tân Thành",
+    "PHUONG_XA"
+  ],
+  [
+    139,
+    "26782",
+    "Tân Thới Hiệp",
+    "PHUONG_XA"
+  ],
+  [
+    140,
+    "27478",
+    "Tân Thuận",
+    "PHUONG_XA"
+  ],
+  [
+    141,
+    "25888",
+    "Tân Uyên",
+    "PHUONG_XA"
+  ],
+  [
+    142,
+    "27604",
+    "Tân Vĩnh Lộc",
+    "PHUONG_XA"
+  ],
+  [
+    143,
+    "26842",
+    "Tăng Nhơn Phú",
+    "PHUONG_XA"
+  ],
+  [
+    144,
+    "25843",
+    "Tây Nam",
+    "PHUONG_XA"
+  ],
+  [
+    145,
+    "27013",
+    "Tây Thạnh",
+    "PHUONG_XA"
+  ],
+  [
+    146,
+    "27526",
+    "Thái Mỹ",
+    "PHUONG_XA"
+  ],
+  [
+    147,
+    "25807",
+    "Thanh An",
+    "PHUONG_XA"
+  ],
+  [
+    148,
+    "27676",
+    "Thạnh An",
+    "PHUONG_XA"
+  ],
+  [
+    149,
+    "26956",
+    "Thạnh Mỹ Tây",
+    "PHUONG_XA"
+  ],
+  [
+    150,
+    "26773",
+    "Thới An",
+    "PHUONG_XA"
+  ],
+  [
+    151,
+    "25846",
+    "Thới Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    152,
+    "26898",
+    "Thông Tây Hội",
+    "PHUONG_XA"
+  ],
+  [
+    153,
+    "25747",
+    "Thủ Dầu Một",
+    "PHUONG_XA"
+  ],
+  [
+    154,
+    "26824",
+    "Thủ Đức",
+    "PHUONG_XA"
+  ],
+  [
+    155,
+    "25978",
+    "Thuận An",
+    "PHUONG_XA"
+  ],
+  [
+    156,
+    "25969",
+    "Thuận Giao",
+    "PHUONG_XA"
+  ],
+  [
+    157,
+    "25909",
+    "Thường Tân",
+    "PHUONG_XA"
+  ],
+  [
+    158,
+    "25819",
+    "Trừ Văn Thố",
+    "PHUONG_XA"
+  ],
+  [
+    159,
+    "26785",
+    "Trung Mỹ Tây",
+    "PHUONG_XA"
+  ],
+  [
+    160,
+    "27286",
+    "Vĩnh Hội",
+    "PHUONG_XA"
+  ],
+  [
+    161,
+    "27601",
+    "Vĩnh Lộc",
+    "PHUONG_XA"
+  ],
+  [
+    162,
+    "25912",
+    "Vĩnh Tân",
+    "PHUONG_XA"
+  ],
+  [
+    163,
+    "26506",
+    "Vũng Tàu",
+    "PHUONG_XA"
+  ],
+  [
+    164,
+    "27190",
+    "Vườn Lài",
+    "PHUONG_XA"
+  ],
+  [
+    165,
+    "27259",
+    "Xóm Chiếu",
+    "PHUONG_XA"
+  ],
+  [
+    166,
+    "27139",
+    "Xuân Hòa",
+    "PHUONG_XA"
+  ],
+  [
+    167,
+    "26584",
+    "Xuân Sơn",
+    "PHUONG_XA"
+  ],
+  [
+    168,
+    "27577",
+    "Xuân Thới Sơn",
+    "PHUONG_XA"
+  ],
+  [
+    169,
+    "26632",
+    "Xuyên Mộc",
+    "PHUONG_XA"
+  ]
+]

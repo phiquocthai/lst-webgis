@@ -180,11 +180,26 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login', onAu
                 <div className="auth-input-wrapper">
                   <Shield size={16} className="auth-icon" />
                   <select value={role} onChange={(e) => setRole(e.target.value)}>
-                    <option value="NGUOI_XEM">Người xem (Xem WebGIS & Dự báo)</option>
-                    <option value="CHUYEN_GIA">Chuyên gia (Huấn luyện AI, xử lý dữ liệu)</option>
-                    <option value="ADMIN">Quản trị viên (Toàn quyền hệ thống)</option>
+                    <option value="NGUOI_XEM">Người dùng (Chỉ xem Bản đồ, Chuỗi thời gian & Thống kê)</option>
+                    <option value="ADMIN">Quản trị viên (Toàn quyền nạp dữ liệu GEE & Huấn luyện AI)</option>
                   </select>
                 </div>
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div style={{
+                background: '#f8fafc',
+                border: '1px dashed #cbd5e1',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                fontSize: '11.5px',
+                color: '#64748b',
+                lineHeight: '1.5'
+              }}>
+                <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '2px' }}>💡 Tài khoản thử nghiệm:</div>
+                <div>• <b>Quản trị viên (Admin):</b> <code>admin</code> | mật khẩu: <code>123456</code> (hoặc <code>123</code>)</div>
+                <div>• <b>Người dùng (Viewer):</b> <code>viewer</code> | mật khẩu: <code>123</code></div>
               </div>
             )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
@@ -38,91 +38,457 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   Eye,
-  RefreshCw
+  RefreshCw,
+  Globe,
+  Maximize2,
+  SlidersHorizontal,
+  ListFilter,
+  Crosshair,
+  Compass,
+  MapPin,
+  Leaf,
+  SunMedium,
+  BookOpen,
+  HelpCircle,
+  Info,
+  Activity,
+  Zap,
+  Radio
 } from 'lucide-react';
 import AuthModal from './AuthModal';
 import UserProfilePopup from './UserProfilePopup';
+import Map3DView from './Map3DView';
+import WardListPanel from './WardListPanel';
+import MapFrameModal from './MapFrameModal';
 
 const API_BASE = '/api';
 
-// Chuỗi LST Landsat 16 ngày mẫu tại TP.HCM (46 mốc) phục vụ Phòng thử tiền xử lý
-const PREP_CHART_POINTS = [
-  { date: '01-01', raw: 32.5, clean: 32.5, isOutlier: false, isMissing: false },
-  { date: '01-17', raw: 33.1, clean: 33.1, isOutlier: false, isMissing: false },
-  { date: '02-02', raw: 34.0, clean: 34.0, isOutlier: false, isMissing: false },
-  { date: '02-18', raw: 34.6, clean: 34.6, isOutlier: false, isMissing: false },
-  { date: '03-06', raw: 35.8, clean: 35.8, isOutlier: false, isMissing: false },
-  { date: '03-21', raw: 36.2, clean: 36.2, isOutlier: false, isMissing: false },
-  { date: '04-06', raw: 36.9, clean: 36.9, isOutlier: false, isMissing: false },
-  { date: '04-22', raw: 37.1, clean: 37.1, isOutlier: false, isMissing: false },
-  { date: '05-08', raw: 36.4, clean: 36.4, isOutlier: false, isMissing: false },
-  { date: '05-24', raw: 35.2, clean: 35.2, isOutlier: false, isMissing: false },
-  { date: '06-09', raw: 150.0, clean: 34.5, isOutlier: true, isMissing: false, note: 'Nhiễu bức xạ chói phản xạ (150 °C)' },
-  { date: '06-25', raw: null, clean: 33.9, isOutlier: false, isMissing: true, note: 'Khuyết do mây mùa mưa' },
-  { date: '07-11', raw: 33.2, clean: 33.2, isOutlier: false, isMissing: false },
-  { date: '07-27', raw: 32.8, clean: 32.8, isOutlier: false, isMissing: false },
-  { date: '08-12', raw: 33.0, clean: 33.0, isOutlier: false, isMissing: false },
-  { date: '08-28', raw: null, clean: 32.6, isOutlier: false, isMissing: true, note: 'Khuyết mây che phủ' },
-  { date: '09-13', raw: 32.4, clean: 32.4, isOutlier: false, isMissing: false },
-  { date: '09-29', raw: 32.1, clean: 32.1, isOutlier: false, isMissing: false },
-  { date: '10-15', raw: null, clean: 31.8, isOutlier: false, isMissing: true, note: 'Khuyết do mây giông' },
-  { date: '10-31', raw: 32.2, clean: 32.2, isOutlier: false, isMissing: false },
-  { date: '11-16', raw: -8.0, clean: 32.6, isOutlier: true, isMissing: false, note: 'Nhiễu âm cảm biến (-8 °C)' },
-  { date: '12-02', raw: 33.1, clean: 33.1, isOutlier: false, isMissing: false },
-  { date: '12-18', raw: 33.4, clean: 33.4, isOutlier: false, isMissing: false },
-  { date: '01-03', raw: 33.8, clean: 33.8, isOutlier: false, isMissing: false },
-  { date: '01-19', raw: 34.2, clean: 34.2, isOutlier: false, isMissing: false },
-  { date: '02-04', raw: 35.1, clean: 35.1, isOutlier: false, isMissing: false },
-  { date: '02-20', raw: 35.9, clean: 35.9, isOutlier: false, isMissing: false },
-  { date: '03-08', raw: 36.5, clean: 36.5, isOutlier: false, isMissing: false },
-  { date: '03-24', raw: 37.0, clean: 37.0, isOutlier: false, isMissing: false },
-  { date: '04-09', raw: 37.4, clean: 37.4, isOutlier: false, isMissing: false },
-  { date: '04-25', raw: 36.8, clean: 36.8, isOutlier: false, isMissing: false },
-  { date: '05-11', raw: 36.0, clean: 36.0, isOutlier: false, isMissing: false },
-  { date: '05-27', raw: 35.4, clean: 35.4, isOutlier: false, isMissing: false },
-  { date: '06-12', raw: 34.8, clean: 34.8, isOutlier: false, isMissing: false },
-  { date: '06-28', raw: 34.1, clean: 34.1, isOutlier: false, isMissing: false },
-  { date: '07-14', raw: 82.0, clean: 33.7, isOutlier: true, isMissing: false, note: 'Nhiễu nhiệt cực đoan (82 °C)' },
-  { date: '07-30', raw: 33.2, clean: 33.2, isOutlier: false, isMissing: false },
-  { date: '08-15', raw: 32.9, clean: 32.9, isOutlier: false, isMissing: false },
-  { date: '08-31', raw: 32.7, clean: 32.7, isOutlier: false, isMissing: false },
-  { date: '09-16', raw: null, clean: 32.5, isOutlier: false, isMissing: true, note: 'Khuyết mây mưa rào' },
-  { date: '10-02', raw: 32.3, clean: 32.3, isOutlier: false, isMissing: false },
-  { date: '10-18', raw: 32.0, clean: 32.0, isOutlier: false, isMissing: false },
-  { date: '11-03', raw: 32.5, clean: 32.5, isOutlier: false, isMissing: false },
-  { date: '11-19', raw: 33.0, clean: 33.0, isOutlier: false, isMissing: false },
-  { date: '12-05', raw: 33.5, clean: 33.5, isOutlier: false, isMissing: false },
-  { date: '12-21', raw: 33.9, clean: 33.9, isOutlier: false, isMissing: false }
+// 46 mốc quan sát chu kỳ 16 ngày Landsat qua 2 chu kỳ năm
+const ACQUISITION_DATES = [
+  '01-01', '01-17', '02-02', '02-18', '03-06', '03-21', '04-06', '04-22', '05-08', '05-24',
+  '06-09', '06-25', '07-11', '07-27', '08-12', '08-28', '09-13', '09-29', '10-15', '10-31',
+  '11-16', '12-02', '12-18', '01-03', '01-19', '02-04', '02-20', '03-08', '03-24', '04-09',
+  '04-25', '05-11', '05-27', '06-12', '06-28', '07-14', '07-30', '08-15', '08-31', '09-16',
+  '10-02', '10-18', '11-03', '11-19', '12-05', '12-21'
 ];
 
-// 1. LST Color Palette
+// Cấu hình vi khí hậu và chuỗi quan trắc 6 khu vực đặc trưng tại TP.HCM
+const PREP_DISTRICT_CONFIGS = {
+  'Quận 1': {
+    name: 'Quận 1 (Trung tâm)',
+    fullName: 'Quận 1 (Trung tâm - Bến Nghé)',
+    desc: 'Lõi đô thị mật độ cao, hiệu ứng đảo nhiệt UHI mạnh, tỷ lệ bê tông hóa > 85%',
+    baseLST: 34.6,
+    seasonAmp: 2.8,
+    outliers: [
+      { date: '06-09', raw: 150.0, note: 'Bão hòa cảm biến nhiệt TIRS Band 10 (150.0 °C)' },
+      { date: '11-16', raw: -8.0, note: 'Nhiễu âm do đỉnh mây đối lưu lạnh cao tầng (-8.0 °C)' },
+      { date: '07-14', raw: 82.0, note: 'Bức xạ chói phản xạ từ mái tôn nhà cao tầng (82.0 °C)' }
+    ],
+    missingDates: ['06-25', '08-28', '10-15', '09-16']
+  },
+  'Tân Bình': {
+    name: 'Tân Bình (Sân bay TSN)',
+    fullName: 'Tân Bình (Sân bay Tân Sơn Nhất)',
+    desc: 'Bề mặt đường băng và mái kho logistics hấp thụ nhiệt mạnh, nhiệt độ nền cao nhất thành phố',
+    baseLST: 35.8,
+    seasonAmp: 3.1,
+    outliers: [
+      { date: '05-08', raw: 142.0, note: 'Bức xạ nhiệt mặt đường băng bê tông TSN (142.0 °C)' },
+      { date: '11-03', raw: -5.0, note: 'Bóng mây dông nhiệt làm suy giảm bức xạ (-5.0 °C)' },
+      { date: '07-30', raw: 88.0, note: 'Phản xạ chói nhà kho logistics KCN (88.0 °C)' }
+    ],
+    missingDates: ['07-11', '08-12', '10-02']
+  },
+  'Thủ Đức': {
+    name: 'TP. Thủ Đức (Khu CNC)',
+    fullName: 'TP. Thủ Đức (Khu Công nghệ Cao)',
+    desc: 'Đô thị công nghệ & công nghiệp kết hợp mảng xanh sinh thái ven sông Đồng Nai',
+    baseLST: 34.2,
+    seasonAmp: 2.7,
+    outliers: [
+      { date: '04-22', raw: 135.0, note: 'Mái xưởng bán dẫn bão hòa quang phổ (135.0 °C)' },
+      { date: '10-31', raw: -6.0, note: 'Bóng đổ mây dông mùa mưa (-6.0 °C)' },
+      { date: '06-28', raw: 78.0, note: 'Phản xạ mặt kính khu văn phòng (78.0 °C)' }
+    ],
+    missingDates: ['06-09', '08-28', '10-15']
+  },
+  'Bình Thạnh': {
+    name: 'Bình Thạnh (Thanh Đa)',
+    fullName: 'Bình Thạnh (Bán đảo Thanh Đa)',
+    desc: 'Được bao bọc bởi sông Sài Gòn, vi khí hậu sông nước làm mát hơn trung tâm 2–3 °C',
+    baseLST: 32.2,
+    seasonAmp: 2.3,
+    outliers: [
+      { date: '07-11', raw: 110.0, note: 'Nhiễu gương phản xạ mặt nước sông (110.0 °C)' },
+      { date: '11-16', raw: -7.0, note: 'Nhiễu nhiệt mây tầng thấp (-7.0 °C)' }
+    ],
+    missingDates: ['06-25', '07-27', '09-13', '10-15']
+  },
+  'Cần Giờ': {
+    name: 'Cần Giờ (Rừng Sác)',
+    fullName: 'Cần Giờ (Khu DTSQ Rừng Sác)',
+    desc: 'Rừng ngập mặn diện tích lớn, độ che phủ thực vật > 75%, đóng vai trò lá phổi xanh làm mát',
+    baseLST: 29.5,
+    seasonAmp: 1.9,
+    outliers: [
+      { date: '06-12', raw: 95.0, note: 'Lỗi đo trạm bến phà ven cửa sông (95.0 °C)' },
+      { date: '12-02', raw: -12.0, note: 'Nhiễu tầng mây biển cận duyên (-12.0 °C)' }
+    ],
+    missingDates: ['05-24', '06-25', '08-15', '09-29', '10-18']
+  },
+  'Củ Chi': {
+    name: 'Củ Chi (Ven đô)',
+    fullName: 'Củ Chi (Nông nghiệp ven đô)',
+    desc: 'Đất vườn cây ăn trái, cao su và lúa nước, biên độ nhiệt ngày đêm lớn',
+    baseLST: 32.0,
+    seasonAmp: 2.5,
+    outliers: [
+      { date: '05-11', raw: 120.0, note: 'Nhiễu nhiệt đốt rơm rạ đồng ruộng (120.0 °C)' },
+      { date: '11-19', raw: -5.0, note: 'Bóng mây che phủ viễn thám (-5.0 °C)' }
+    ],
+    missingDates: ['06-09', '07-11', '08-31', '10-02']
+  }
+};
+
+// Hàm tính toán tiền xử lý chuỗi LST phản hồi tức thì
+function computePreprocessingSeries(districtKey, missingMethod, outlierMethod, threshold, normMethod, trainEndYear) {
+  const cfg = PREP_DISTRICT_CONFIGS[districtKey] || PREP_DISTRICT_CONFIGS['Quận 1'];
+  
+  // 1. Tạo chuỗi quan trắc thô 46 mốc
+  const rawList = ACQUISITION_DATES.map((date, idx) => {
+    const month = parseInt(date.slice(0, 2), 10);
+    const seasonal = cfg.seasonAmp * Math.sin((month - 1) * Math.PI / 6.0);
+    const noise = Math.sin(idx * 1.7) * 0.45;
+    let val = Math.round((cfg.baseLST + seasonal + noise) * 10) / 10;
+    
+    const outlierObj = cfg.outliers.find(o => o.date === date);
+    if (outlierObj) {
+      return { date, raw: outlierObj.raw, note: outlierObj.note, isNaturalMissing: false };
+    }
+    if (cfg.missingDates.includes(date)) {
+      return { date, raw: null, note: 'Khuyết mây mùa mưa nhiệt đới TP.HCM', isNaturalMissing: true };
+    }
+    return { date, raw: val, note: null, isNaturalMissing: false };
+  });
+
+  // 2. Nhận diện nhiễu ngoại lai theo thuật toán người dùng chọn
+  const numericVals = rawList.map(p => p.raw).filter(v => v !== null);
+  let lowerBound = 15.0;
+  let upperBound = Number(threshold) || 60.0;
+  
+  if (outlierMethod === 'IQR') {
+    const sorted = [...numericVals].sort((a, b) => a - b);
+    const q1 = sorted[Math.floor(sorted.length * 0.25)];
+    const q3 = sorted[Math.floor(sorted.length * 0.75)];
+    const iqr = q3 - q1;
+    lowerBound = Math.round((q1 - 1.5 * iqr) * 10) / 10;
+    upperBound = Math.round((q3 + 1.5 * iqr) * 10) / 10;
+  } else if (outlierMethod === 'Z-score') {
+    const mean = numericVals.reduce((a, b) => a + b, 0) / numericVals.length;
+    const variance = numericVals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / numericVals.length;
+    const std = Math.sqrt(variance) || 1.0;
+    lowerBound = Math.round((mean - 3.0 * std) * 10) / 10;
+    upperBound = Math.round((mean + 3.0 * std) * 10) / 10;
+  }
+
+  const flaggedList = rawList.map(p => {
+    if (p.raw === null) {
+      return { ...p, isOutlier: false, isMissing: true };
+    }
+    const isOut = p.raw < lowerBound || p.raw > upperBound;
+    return {
+      ...p,
+      isOutlier: isOut,
+      isMissing: isOut || p.isNaturalMissing
+    };
+  });
+
+  const outlierPoints = flaggedList.filter(p => p.isOutlier);
+  const outlierValues = outlierPoints.map(p => `${p.raw} °C`);
+  const missingCount = flaggedList.filter(p => p.isNaturalMissing).length;
+
+  // 3. Xử lý dữ liệu thiếu và ngoại lai
+  let cleanPoints = [];
+  if (missingMethod === 'Loai_bo') {
+    cleanPoints = flaggedList
+      .filter(p => !p.isOutlier && !p.isNaturalMissing)
+      .map(p => ({ ...p, clean: p.raw }));
+  } else {
+    cleanPoints = flaggedList.map((p, i) => {
+      if (!p.isOutlier && !p.isNaturalMissing) {
+        return { ...p, clean: p.raw };
+      }
+      let prevVal = null;
+      for (let j = i - 1; j >= 0; j--) {
+        if (!flaggedList[j].isOutlier && !flaggedList[j].isNaturalMissing) {
+          prevVal = flaggedList[j].raw;
+          break;
+        }
+      }
+      let nextVal = null;
+      for (let j = i + 1; j < flaggedList.length; j++) {
+        if (!flaggedList[j].isOutlier && !flaggedList[j].isNaturalMissing) {
+          nextVal = flaggedList[j].raw;
+          break;
+        }
+      }
+      const filled = prevVal !== null && nextVal !== null
+        ? Math.round(((prevVal + nextVal) / 2) * 10) / 10
+        : (prevVal ?? nextVal ?? cfg.baseLST);
+      return { ...p, clean: filled };
+    });
+  }
+
+  // 4. Chuẩn hóa đặc trưng dựa DUY NHẤT trên tập Train (chống rò rỉ dữ liệu)
+  const trainCutoff = Math.floor(cleanPoints.length * 0.70);
+  const trainSubset = cleanPoints.slice(0, trainCutoff);
+  const trainValues = trainSubset.map(p => p.clean);
+  const trainMin = trainValues.length > 0 ? Math.min(...trainValues) : 30.0;
+  const trainMax = trainValues.length > 0 ? Math.max(...trainValues) : 38.0;
+  const trainMean = trainValues.length > 0 ? (trainValues.reduce((a, b) => a + b, 0) / trainValues.length) : 34.0;
+  const trainVariance = trainValues.length > 0 ? (trainValues.reduce((a, b) => a + Math.pow(b - trainMean, 2), 0) / trainValues.length) : 2.0;
+  const trainStd = Math.sqrt(trainVariance) || 1.0;
+
+  const finalPoints = cleanPoints.map(p => {
+    let norm = p.clean;
+    if (normMethod === 'Min-Max') {
+      const denom = trainMax - trainMin || 1.0;
+      norm = Math.round(((p.clean - trainMin) / denom) * 1000) / 1000;
+    } else if (normMethod === 'Z-score') {
+      norm = Math.round(((p.clean - trainMean) / trainStd) * 1000) / 1000;
+    }
+    return { ...p, normVal: norm };
+  });
+
+  return {
+    cfg,
+    points: finalPoints,
+    missingCount,
+    outlierCount: outlierPoints.length,
+    outlierValues,
+    cleanCount: finalPoints.length,
+    lowerBound,
+    upperBound,
+    trainStats: {
+      min: Math.round(trainMin * 100) / 100,
+      max: Math.round(trainMax * 100) / 100,
+      mean: Math.round(trainMean * 100) / 100,
+      std: Math.round(trainStd * 100) / 100
+    }
+  };
+}
+
+// 1. LST Color Palette (Ảnh 1 chuẩn GEE: #0000FF -> #0066FF -> #00FFFF -> #00FF00 -> #FFFF00 -> #FFCC00 -> #FF6600 -> #FF0000)
 const getLSTColor = (val) => {
-  if (val >= 36.0) return '#ef4444'; // Hot Red
-  if (val >= 34.0) return '#f97316'; // Orange
-  if (val >= 32.0) return '#facc15'; // Amber
-  if (val >= 30.0) return '#10b981'; // Emerald
-  return '#3b82f6'; // Cyan/Blue
+  if (val === null || val === undefined || isNaN(val)) return '#00FFFF';
+  const num = Number(val);
+  if (num < 28.0) return '#0000FF'; // Xanh dương đậm (< 28°C - Rất mát mẻ)
+  if (num < 30.0) return '#0066FF'; // Xanh lam (28 - 30°C - Mát mẻ)
+  if (num < 32.0) return '#00FFFF'; // Cyan (30 - 32°C - Dễ chịu)
+  if (num < 34.0) return '#00FF00'; // Xanh lá cây (32 - 34°C - Ổn định)
+  if (num < 35.5) return '#FFFF00'; // Vàng chanh (34 - 35.5°C - Ấm nóng vừa)
+  if (num < 37.0) return '#FFCC00'; // Vàng cam (35.5 - 37°C - Nóng)
+  if (num < 38.5) return '#FF6600'; // Cam (37 - 38.5°C - Rất nóng)
+  return '#FF0000';                 // Đỏ rực (>= 38.5°C - Đảo nhiệt UHI cực nóng)
 };
 
-// 2. NDVI (Chỉ số thực vật - Chuẩn viễn thám thẩm mỹ cao: Đô thị/Đất xám nhạt -> Vàng lúa ấm -> Xanh ngọc chanh -> Xanh mạ non -> Xanh ngọc lục bảo sâu)
+// 2. NDVI Color Palette (Ảnh 2 chuẩn GEE: #FF0000 -> #FF7F00 -> #FFFF00 -> #ADFF2F -> #00FF00 -> #00FFFF -> #007FFF -> #0000FF)
 const getNDVIColor = (val) => {
-  if (val === null || val === undefined) return '#10b981';
-  if (val >= 0.70) return '#047857'; // Rừng ngập mặn Cần Giờ / Vườn quốc gia (Xanh lục sâu thẳm)
-  if (val >= 0.55) return '#10b981'; // Thảm thực vật xanh tốt (Emerald tươi tắn)
-  if (val >= 0.40) return '#34d399'; // Cây trồng đô thị / Công viên (Xanh ngọc mát dịu)
-  if (val >= 0.28) return '#a3e635'; // Cây bụi / Đồng cỏ (Xanh chanh tươi mới)
-  if (val >= 0.15) return '#facc15'; // Đất nông nghiệp thưa / Vàng ấm
-  return '#cbd5e1'; // Khu đô thị bê tông / Nước / Đất trống (Xám slate thanh lịch, dịu mắt)
+  if (val === null || val === undefined || isNaN(val)) return '#00FF00';
+  const num = Number(val);
+  if (num < 0.15) return '#FF0000'; // Đỏ (< 0.15 - Bê tông hóa dày đặc / Không thực vật)
+  if (num < 0.25) return '#FF7F00'; // Cam (0.15 - 0.25 - Cây cối rất thưa)
+  if (num < 0.35) return '#FFFF00'; // Vàng (0.25 - 0.35 - Thảm cỏ thưa / Đất trống)
+  if (num < 0.45) return '#ADFF2F'; // Xanh vàng GreenYellow (0.35 - 0.45 - Cây bụi)
+  if (num < 0.55) return '#00FF00'; // Xanh lá cây (0.45 - 0.55 - Cây xanh trung bình)
+  if (num < 0.65) return '#00FFFF'; // Cyan (0.55 - 0.65 - Cây xanh tươi tốt)
+  if (num < 0.75) return '#007FFF'; // Xanh lam Azure (0.65 - 0.75 - Rừng rậm rạp)
+  return '#0000FF';                 // Xanh dương đậm (>= 0.75 - Rừng nguyên sinh Cần Giờ / Mặt nước)
 };
 
-// 3. TVDI (Chỉ số khô hạn viễn thám chuẩn quốc tế: Xanh nước biển dịu -> Ngọc lam -> Vàng hổ phách -> Cam đào -> Đỏ san hô sang trọng)
+// 3. TVDI Color Palette (Ảnh 4 chuẩn GEE: #066b00 -> #0bc400 -> #0ce100 -> #00ff00 -> #ffff00 -> #ffcc00 -> #ff6600 -> #ff0000)
 const getTVDIColor = (val) => {
-  if (val === null || val === undefined) return '#38bdf8';
-  if (val >= 0.80) return '#dc2626'; // Khô hạn đặc biệt gay gắt (Đỏ tươi)
-  if (val >= 0.65) return '#ea580c'; // Khô hạn cao (Cam gạch)
-  if (val >= 0.50) return '#f59e0b'; // Khô hạn vừa (Vàng hổ phách ấm)
-  if (val >= 0.35) return '#06b6d4'; // Bình thường / Ẩm nhẹ (Xanh cyan hiện đại)
-  return '#0ea5e9'; // Rất ẩm / Nguồn nước / Sông hồ (Xanh lam tươi mát)
+  if (val === null || val === undefined || isNaN(val)) return '#00ff00';
+  const num = Number(val);
+  if (num < 0.25) return '#066b00'; // Xanh lục rất đậm (< 0.25 - Rất ẩm ướt / Đủ nước)
+  if (num < 0.35) return '#0bc400'; // Xanh lục đậm (0.25 - 0.35 - Ẩm ướt)
+  if (num < 0.45) return '#0ce100'; // Xanh lục sáng (0.35 - 0.45 - Đủ ẩm)
+  if (num < 0.55) return '#00ff00'; // Xanh chanh tươi (0.45 - 0.55 - Bình thường)
+  if (num < 0.65) return '#ffff00'; // Vàng (0.55 - 0.65 - Bắt đầu khô hạn)
+  if (num < 0.75) return '#ffcc00'; // Vàng cam (0.65 - 0.75 - Khô hạn vừa)
+  if (num < 0.85) return '#ff6600'; // Cam (0.75 - 0.85 - Khô hạn cao)
+  return '#ff0000';                 // Đỏ rực (>= 0.85 - Khô hạn đặc biệt gay gắt)
+};
+
+// Danh sách 10 trạm quan trắc viễn thám & khí tượng bề mặt trọng điểm TP.HCM
+const TRAM_VIEN_THAM_HCM = [
+  {
+    id: 'TSH',
+    ten: 'Trạm Khí tượng Tân Sơn Hòa',
+    ma: 'WMO-48900',
+    khu_vuc: 'Quận Tân Bình',
+    lat: 10.7984,
+    lng: 106.6631,
+    loai: 'Trạm Bề mặt Quốc gia WMO / Hiệu chuẩn Viễn thám',
+    cam_bien: 'Landsat 8/9 Band 10 TIRS + AWS Davis Vantage Pro2',
+    do_cao: '8.5 m',
+    do_chinh_xac: '±0.4 °C (Chuẩn viễn thám)',
+    dac_diem: 'Trạm gốc kiểm chuẩn đảo nhiệt viễn thám sân bay & KCN Tân Bình'
+  },
+  {
+    id: 'TCV',
+    ten: 'Trạm Quan trắc Lõi UHI Quận 1',
+    ma: 'UHI-Q1',
+    khu_vuc: 'Quận 1',
+    lat: 10.7875,
+    lng: 106.7053,
+    loai: 'Trạm Vi khí hậu Đô thị Lõi',
+    cam_bien: 'Landsat 8/9 TIRS + Cảm biến hồng ngoại nhiệt Testo',
+    do_cao: '4.2 m',
+    do_chinh_xac: '±0.5 °C',
+    dac_diem: 'Đối chứng giữa lõi bê tông hóa cao tầng và mảng xanh công viên'
+  },
+  {
+    id: 'SHTP',
+    ten: 'Trạm Tháp Viễn thám Khu CNC',
+    ma: 'FLUX-TD',
+    khu_vuc: 'TP. Thủ Đức',
+    lat: 10.8542,
+    lng: 106.7905,
+    loai: 'Tháp Thông lượng Eddy Covariance',
+    cam_bien: 'Landsat 8/9 + MODIS/Terra + Tháp Flux Tower',
+    do_cao: '22.0 m',
+    do_chinh_xac: '±0.3 °C',
+    dac_diem: 'Đo thông lượng nhiệt bề mặt, bức xạ mặt đất và chỉ số NDVI viễn thám'
+  },
+  {
+    id: 'LMX',
+    ten: 'Trạm Nông nghiệp Lê Minh Xuân',
+    ma: 'AGR-BC',
+    khu_vuc: 'Huyện Bình Chánh',
+    lat: 10.7302,
+    lng: 106.5304,
+    loai: 'Trạm Sinh thái Nông nghiệp Tây Nam',
+    cam_bien: 'Landsat 8/9 TIRS + Cảm biến độ ẩm đất SMAP 5cm',
+    do_cao: '3.0 m',
+    do_chinh_xac: '±0.5 °C',
+    dac_diem: 'Quan trắc nhiệt độ đất canh tác, đất trống và vùng trũng Tây Nam'
+  },
+  {
+    id: 'CG',
+    ten: 'Trạm Sinh thái Rừng Cần Giờ',
+    ma: 'ECO-CG',
+    khu_vuc: 'Huyện Cần Giờ',
+    lat: 10.4208,
+    lng: 106.8702,
+    loai: 'Trạm Sinh quyển UNESCO Viễn thám',
+    cam_bien: 'Landsat 8/9 TIRS + Sentinel-3 SLSTR + Tháp khí tượng rừng',
+    do_cao: '16.0 m',
+    do_chinh_xac: '±0.4 °C',
+    dac_diem: 'Đánh giá khả năng hạ nhiệt tự nhiên của tán rừng đước ngập mặn'
+  },
+  {
+    id: 'CC',
+    ten: 'Trạm Nông nghiệp Củ Chi',
+    ma: 'AGR-CC',
+    khu_vuc: 'Huyện Củ Chi',
+    lat: 11.0005,
+    lng: 106.5204,
+    loai: 'Trạm Vi khí hậu Vùng đệm Tây Bắc',
+    cam_bien: 'Landsat 8/9 TIRS + CHIRPS Rain Gauge + AWS',
+    do_cao: '12.0 m',
+    do_chinh_xac: '±0.5 °C',
+    dac_diem: 'Theo dõi chỉ số khô hạn thực vật TVDI và nhiệt độ bề mặt đất nông thôn'
+  },
+  {
+    id: 'BT',
+    ten: 'Trạm Đô thị KCN Tân Tạo',
+    ma: 'IND-BT',
+    khu_vuc: 'Quận Bình Tân',
+    lat: 10.7501,
+    lng: 106.6002,
+    loai: 'Trạm Đảo nhiệt Công nghiệp',
+    cam_bien: 'Landsat 8/9 TIRS Band 10 + Thiết bị đo bức xạ phản xạ mái tôn',
+    do_cao: '6.5 m',
+    do_chinh_xac: '±0.6 °C',
+    dac_diem: 'Giám sát hiện tượng phản xạ gương từ mái tôn mạ kẽm gây dị thường nhiệt'
+  },
+  {
+    id: 'CTL',
+    ten: 'Trạm Cảng Cát Lái - Logistics',
+    ma: 'LOG-CTL',
+    khu_vuc: 'TP. Thủ Đức',
+    lat: 10.7603,
+    lng: 106.7904,
+    loai: 'Trạm Bề mặt Hạ tầng Logistics',
+    cam_bien: 'Landsat 8/9 TIRS + Camera nhiệt quang học ven sông',
+    do_cao: '10.0 m',
+    do_chinh_xac: '±0.5 °C',
+    dac_diem: 'Nhiệt bề mặt bãi container, mặt đường nhựa giao thông và sông Đồng Nai'
+  },
+  {
+    id: 'NB',
+    ten: 'Trạm Cửa sông Thủy văn Nhà Bè',
+    ma: 'HYD-NB',
+    khu_vuc: 'Huyện Nhà Bè',
+    lat: 10.6805,
+    lng: 106.7402,
+    loai: 'Trạm Vi khí hậu Cửa sông - Ngập triều',
+    cam_bien: 'Landsat 8/9 TIRS + Trạm đo triều ký tự động',
+    do_cao: '3.0 m',
+    do_chinh_xac: '±0.4 °C',
+    dac_diem: 'Nghiên cứu tác động làm mát của chế độ bán nhật triều sông Soài Rạp'
+  },
+  {
+    id: 'HM',
+    ten: 'Trạm Vành đai Xanh Hóc Môn',
+    ma: 'GRN-HM',
+    khu_vuc: 'Huyện Hóc Môn',
+    lat: 10.8804,
+    lng: 106.5902,
+    loai: 'Trạm Đệm Chuyển tiếp Ngoại thành',
+    cam_bien: 'Landsat 8/9 TIRS + AWS vi khí hậu',
+    do_cao: '5.5 m',
+    do_chinh_xac: '±0.5 °C',
+    dac_diem: 'Đo gradien giảm nhiệt độ từ khu vực nội thành ra vành đai xanh'
+  }
+];
+
+const getStationsWithLST = (stations, khuVucData, pointsData, curDate) => {
+  return stations.map(st => {
+    let matchedLST = 34.5;
+    let matchedNDVI = 0.35;
+    let matchedTVDI = 0.55;
+    let rain = 15;
+    let humidity = 68;
+
+    if (khuVucData && khuVucData.length > 0) {
+      const cleanDistrict = st.khu_vuc.replace('Quận ', '').replace('Huyện ', '').replace('TP. ', '').trim();
+      const found = khuVucData.find(k => k.ten_khu_vuc && k.ten_khu_vuc.includes(cleanDistrict));
+      if (found) {
+        matchedLST = Number(found.gia_tri_lst) || 34.5;
+        matchedNDVI = Number(found.ndvi) || 0.35;
+        matchedTVDI = Number(found.tvdi) || 0.55;
+      }
+    }
+
+    if (st.id === 'TSH') matchedLST = Math.round((matchedLST + 1.2) * 10) / 10;
+    if (st.id === 'CG') { matchedLST = Math.round((matchedLST - 2.8) * 10) / 10; matchedNDVI = 0.76; matchedTVDI = 0.28; }
+    if (st.id === 'BT') matchedLST = Math.round((matchedLST + 1.8) * 10) / 10;
+    if (st.id === 'TCV') { matchedLST = Math.round((matchedLST + 0.6) * 10) / 10; matchedNDVI = 0.22; }
+    if (st.id === 'CC') { matchedLST = Math.round((matchedLST - 1.1) * 10) / 10; matchedNDVI = 0.58; }
+
+    return {
+      ...st,
+      date: curDate || '2025-12-01',
+      lst: matchedLST,
+      ndvi: matchedNDVI,
+      tvdi: matchedTVDI,
+      rain,
+      humidity
+    };
+  });
 };
 
 export default function App({ initialTab = 'gis', onHome, currentUser, setCurrentUser }) {
@@ -143,13 +509,28 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [districtSearchText, setDistrictSearchText] = useState('');
 
-  // Layers Toggles (Ưu tiên hiển thị bản đồ phân vùng LST 168 xã/phường sau sáp nhập)
+  // Layers Toggles (Ưu tiên hiển thị bản đồ phân vùng LST 167 xã/phường sau sáp nhập)
   const [showObservation, setShowObservation] = useState(false);
+  const [stationMode, setStationMode] = useState('KEY'); // 'KEY' = 10 trạm trọng điểm | 'ALL' = 168 điểm lưới Landsat
+  const [stationDrawerOpen, setStationDrawerOpen] = useState(false);
   const [showForecast, setShowForecast] = useState(false);
   const [showDistricts, setShowDistricts] = useState(true);
   const [showProvinces, setShowProvinces] = useState(false);
   const [geoProvinces, setGeoProvinces] = useState(null);
   const [geoDistricts, setGeoDistricts] = useState(null);
+
+  // 3D Map, 167 Ward Panel, A4 Frame & Threshold Filter
+  const [mapMode, setMapMode] = useState('2D'); // '2D' | '3D'
+  const [extrusionScale, setExtrusionScale] = useState(1.0); // 1.0 | 1.5 | 2.0
+  const [wardListOpen, setWardListOpen] = useState(false);
+  const [mapFrameOpen, setMapFrameOpen] = useState(false);
+  const [thresholdFilter, setThresholdFilter] = useState({
+    enabled: false,
+    metric: 'LST',
+    op: '>=',
+    value: 35.0,
+  });
+  const [mouseCoords, setMouseCoords] = useState({ lat: 10.7760, lng: 106.7000 });
 
   // AI Training Form State
   const [modelsList, setModelsList] = useState([]);
@@ -163,20 +544,23 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
   // Benchmarks State
   const [benchmarkMetrics, setBenchmarkMetrics] = useState([]);
 
-  // Tab Thống kê khu vực State (Ảnh 1, Ảnh 2)
+  // Tab Thống kê khu vực State (Ảnh 1, Ảnh 5)
   const [statsIndicator, setStatsIndicator] = useState('LST'); // LST | NDVI | TVDI
   const [statsMonth, setStatsMonth] = useState(''); // YYYY-MM
   const [statsSource, setStatsSource] = useState('GEE / AI dự báo');
-  const [statsThreshold, setStatsThreshold] = useState(35);
+  const [statsThreshold, setStatsThreshold] = useState(35.0);
+  const [statsCondition, setStatsCondition] = useState('ALL'); // 'ALL' | 'GTE' | 'LTE'
+  const [statsSearchText, setStatsSearchText] = useState('');
   const [statsData, setStatsData] = useState({ city_summary: null, items: [] });
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsSortCol, setStatsSortCol] = useState('tb'); // 'tb' | 'min' | 'max' | 'khu_vuc' | 'dien_tich_km2'
   const [statsSortAsc, setStatsSortAsc] = useState(false);
   const [hoveredBar, setHoveredBar] = useState(null);
 
-  // Tab Chuỗi thời gian State (Chức năng 3: Xem biểu đồ nhiệt độ theo thời gian)
+  // Tab Chuỗi thời gian State (Chức năng 3: Xếp hạng phường/xã theo Ảnh 4)
   const [tsWardId, setTsWardId] = useState(''); // '' = Toàn TP.HCM
   const [tsMonth, setTsMonth] = useState(1); // 1 -> 12
+  const [tsRankingOrder, setTsRankingOrder] = useState('DESC'); // 'DESC' = Nóng nhất | 'ASC' = Mát nhất
   const [tsData, setTsData] = useState(null);
   const [tsLoading, setTsLoading] = useState(false);
   const [tsHoverPoint, setTsHoverPoint] = useState(null);
@@ -195,9 +579,76 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
   const [prepAlert, setPrepAlert] = useState(null);
   const [prepPointHover, setPrepPointHover] = useState(null);
   const [uploadingDataset, setUploadingDataset] = useState(false);
+  const [quickLoadingResearch, setQuickLoadingResearch] = useState(false);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+  const [pipelineReport, setPipelineReport] = useState(null);
+  const [scienceTab, setScienceTab] = useState('cloud'); // 'cloud' | 'outlier' | 'norm'
+  const [simTemp, setSimTemp] = useState(35.0);
 
-  // RBAC Permission Check
-  const isAdmin = currentUser?.vai_tro === 'ADMIN';
+  // Tính toán chuỗi tiền xử lý phản hồi tức thì theo khu vực và tham số
+  const currentPrepData = useMemo(() => {
+    return computePreprocessingSeries(
+      prepDistrict,
+      prepMissing,
+      prepOutlier,
+      prepThreshold,
+      prepNorm,
+      prepTrainEndYear
+    );
+  }, [prepDistrict, prepMissing, prepOutlier, prepThreshold, prepNorm, prepTrainEndYear]);
+
+  // Phân quyền thực tế: Chỉ tài khoản đã đăng nhập có vai_tro === 'ADMIN' mới có quyền Admin
+  const isAdmin = currentUser && currentUser.vai_tro === 'ADMIN';
+
+  // Tự động xoá sạch thông tin cá nhân cũ trong localStorage nếu có
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('auth_user');
+      if (saved) {
+        const u = JSON.parse(saved);
+        if (u && u.ten_dang_nhap && (u.ten_dang_nhap.includes('QUỐC') || u.ten_dang_nhap.includes('THÁI') || u.ten_dang_nhap.includes('khoi'))) {
+          u.ten_dang_nhap = u.vai_tro === 'ADMIN' ? 'admin' : 'viewer';
+          localStorage.setItem('auth_user', JSON.stringify(u));
+          if (setCurrentUser) setCurrentUser(u);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  // Người dùng thường không được phép truy cập vào mục nạp dữ liệu hay huấn luyện AI
+  useEffect(() => {
+    if (!isAdmin && (activeTab === 'datasets' || activeTab === 'training')) {
+      setActiveTab('gis');
+    }
+  }, [isAdmin, activeTab]);
+
+  const handleResetView = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([10.776, 106.700], 11);
+    }
+  };
+
+  const handleFlyToStation = (st) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([st.lat, st.lng], 13.5, { duration: 1.0 });
+    }
+    setSelectedDistrict(null);
+    setSelectedPoint({
+      type: `Trạm Quan Trắc Viễn Thám (${st.ma})`,
+      name: st.ten,
+      code: st.ma,
+      date: st.date,
+      lst: st.lst,
+      ndvi: st.ndvi,
+      tvdi: st.tvdi,
+      rain: st.rain,
+      humidity: st.humidity,
+      sensor: st.cam_bien,
+      note: st.dac_diem,
+      lat: st.lat,
+      lng: st.lng
+    });
+  };
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('auth_token');
@@ -229,12 +680,12 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
   // Load real administrative boundaries (static GeoJSON in /public/geo)
   useEffect(() => {
-    // 168 phường/xã/đặc khu (sau sáp nhập) lấy trực tiếp từ bảng khu_vuc của PostGIS
+    // 167 phường/xã/đặc khu (sau sáp nhập, đã loại Côn Đảo) lấy trực tiếp từ bảng khu_vuc của PostGIS
     fetch(`${API_BASE}/khu-vuc?cha=HCM&geometry=true`)
       .then(r => r.json())
       .then(rows => setGeoDistricts({
         type: 'FeatureCollection',
-        features: rows.filter(k => k.geojson).map(k => ({
+        features: rows.filter(k => k.geojson && !k.ten_khu_vuc?.includes('Côn Đảo')).map(k => ({
           type: 'Feature',
           geometry: k.geojson,
           properties: {
@@ -258,7 +709,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
     fetch(`${API_BASE}/khu-vuc`)
       .then(r => r.json())
-      .then(d => setKhuVucList(d))
+      .then(d => setKhuVucList(d.filter(k => k.ten_khu_vuc && !k.ten_khu_vuc.includes('Côn Đảo'))))
       .catch(console.error);
 
     fetch(`${API_BASE}/lst-data/timeline`)
@@ -296,10 +747,10 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
     const curDate = timeline[selectedDateIdx]?.thoi_gian;
     if (!curDate) return;
 
-    // 1. Phủ kín nhiệt độ cho toàn bộ 168 xã/phường sau sáp nhập
+    // 1. Phủ kín nhiệt độ cho toàn bộ 167 xã/phường sau sáp nhập
     fetch(`${API_BASE}/khu-vuc-lst?thoi_gian=${curDate}`)
       .then(r => r.json())
-      .then(data => setKhuVucLst(data))
+      .then(data => setKhuVucLst(Array.isArray(data) ? data.filter(k => k.ten_khu_vuc && !k.ten_khu_vuc.includes('Côn Đảo')) : []))
       .catch(console.error);
 
     // 2. Điểm trạm đo quan trắc viễn thám
@@ -318,14 +769,17 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
     const params = new URLSearchParams({
       chi_so: statsIndicator,
       thoi_gian: m,
-      nguon: statsSource,
-      nguong_tren: statsThreshold
+      nguon: statsSource
     });
+    if (statsCondition && statsCondition !== 'ALL') {
+      params.append('dieu_kien', statsCondition);
+      params.append('nguong_tren', statsThreshold);
+    }
 
     fetch(`${API_BASE}/thong-ke-khu-vuc?${params.toString()}`)
       .then(r => r.json())
       .then(d => {
-        setStatsData(d);
+        setStatsData(d || { city_summary: null, items: [] });
       })
       .catch(err => {
         console.error('Lỗi lấy thống kê khu vực:', err);
@@ -333,7 +787,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
       .finally(() => {
         setStatsLoading(false);
       });
-  }, [activeTab, statsIndicator, statsMonth, statsSource, statsThreshold, selectedDateIdx, timeline]);
+  }, [activeTab, statsIndicator, statsMonth, statsSource, statsThreshold, statsCondition, selectedDateIdx, timeline]);
 
   // Fetch dữ liệu Chuỗi thời gian (Tab: timeseries)
   useEffect(() => {
@@ -341,7 +795,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
     setTsLoading(true);
 
     const params = new URLSearchParams({
-      thang: tsMonth
+      thang: tsMonth,
+      order: tsRankingOrder
     });
     if (tsWardId) {
       params.append('kv_id', tsWardId);
@@ -358,7 +813,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
       .finally(() => {
         setTsLoading(false);
       });
-  }, [activeTab, tsWardId, tsMonth]);
+  }, [activeTab, tsWardId, tsMonth, tsRankingOrder]);
 
   // Handle Play/Pause Timeline Slider
   useEffect(() => {
@@ -404,10 +859,26 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
       provinceLayerRef.current = L.layerGroup().addTo(map);
       districtLayerRef.current = L.layerGroup().addTo(map);
       markersLayerRef.current = L.layerGroup().addTo(map);
+      // Bắt sự kiện di chuột cập nhật toạ độ địa lý thời gian thực
+      map.on('mousemove', (e) => {
+        setMouseCoords({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+        });
+      });
 
       mapInstanceRef.current = map;
     }
   }, [activeTab]);
+
+  // Khắc phục triệt để lỗi chuyển tab sang tab khác rồi quay lại không load lại map
+  useEffect(() => {
+    if (activeTab === 'gis' && mapMode === '2D' && mapInstanceRef.current) {
+      setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 120);
+    }
+  }, [activeTab, mapMode]);
 
   // Provinces (real boundaries) around TP.HCM
   useEffect(() => {
@@ -463,17 +934,27 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
             fillColor = getTVDIColor(Number(info.tvdi));
           }
         }
-        const strokeColor = selectedIndicator === 'NDVI' 
-          ? '#065f46' // Xanh lục đậm thanh lịch
-          : selectedIndicator === 'TVDI' 
-          ? '#b45309' // Nâu hổ phách ấm, không bị chói
-          : '#0369a1'; // Xanh đại dương tinh tế cho LST
+        // Kiểm tra điều kiện lọc ngưỡng
+        let isMatch = true;
+        if (thresholdFilter && thresholdFilter.enabled) {
+          const tVal = Number(thresholdFilter.value);
+          const metricVal = thresholdFilter.metric === 'NDVI' ? Number(info?.ndvi || 0) : thresholdFilter.metric === 'TVDI' ? Number(info?.tvdi || 0) : Number(info?.gia_tri_lst || 0);
+          if (thresholdFilter.op === '>') isMatch = metricVal > tVal;
+          else if (thresholdFilter.op === '>=') isMatch = metricVal >= tVal;
+          else if (thresholdFilter.op === '<') isMatch = metricVal < tVal;
+          else if (thresholdFilter.op === '<=') isMatch = metricVal <= tVal;
+        }
+
+        const strokeColor = isMatch
+          ? (selectedIndicator === 'NDVI' ? '#065f46' : selectedIndicator === 'TVDI' ? '#b45309' : '#0369a1')
+          : '#94a3b8';
+
         return {
           color: strokeColor,
-          weight: 0.9,
-          opacity: 0.75,
-          fillColor: fillColor,
-          fillOpacity: info ? 0.68 : 0.20
+          weight: isMatch ? 1.1 : 0.4,
+          opacity: isMatch ? 0.85 : 0.2,
+          fillColor: isMatch ? fillColor : '#e2e8f0',
+          fillOpacity: isMatch ? (info ? 0.72 : 0.20) : 0.1
         };
       },
       onEachFeature: (f, lyr) => {
@@ -555,7 +1036,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
         mapInstanceRef.current._hasFitBounds = true;
       }
     }
-  }, [geoDistricts, khuVucLst, selectedIndicator, showDistricts, activeTab]);
+  }, [geoDistricts, khuVucLst, selectedIndicator, showDistricts, activeTab, thresholdFilter]);
 
   // Hàm chọn Phường/Xã từ Select/Search: zoom tới ranh giới và mở popup chi tiết
   const handleSelectWard = (wardId) => {
@@ -618,26 +1099,130 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
     // 1. Observations
     if (showObservation) {
-      lstPoints.forEach(p => {
-        const color = getLSTColor(p.gia_tri_lst);
+      const activeStations = stationMode === 'KEY'
+        ? getStationsWithLST(TRAM_VIEN_THAM_HCM, khuVucLst, lstPoints, timeline[selectedDateIdx]?.thoi_gian)
+        : lstPoints.map((p, idx) => ({
+            id: `LST-GRID-${idx + 1}`,
+            ten: `Điểm Lưới Landsat #${idx + 1}`,
+            ma: `GRID-${p.ma_lst || idx + 1}`,
+            khu_vuc: 'Toạ độ Lưới Landsat',
+            lat: p.vi_do,
+            lng: p.kinh_do,
+            loai: 'Điểm Lưới Chu kỳ 16 ngày',
+            cam_bien: 'Landsat 8/9 Band 10 TIRS',
+            do_cao: 'Vệ tinh 705 km',
+            do_chinh_xac: 'Pixel 30m x 30m',
+            dac_diem: 'Quan trắc chuỗi thời gian GEE Landsat 8/9',
+            date: p.thoi_gian,
+            lst: Math.round(p.gia_tri_lst * 10) / 10,
+            ndvi: p.ndvi !== null && p.ndvi !== undefined ? Math.round(p.ndvi * 1000) / 1000 : 0.35,
+            tvdi: 0.55,
+            rain: p.luong_mua,
+            humidity: p.do_am_dat
+          }));
+
+      activeStations.forEach(st => {
+        const color = getLSTColor(st.lst);
+        const isKey = stationMode === 'KEY';
+
+        const html = `
+          <div class="station-radar-marker" style="${isKey ? '' : 'transform: scale(0.72);'}">
+            <div class="station-radar-pulse" style="background: ${color};"></div>
+            <div class="station-radar-pill" style="background: rgba(15, 23, 42, 0.88); border-color: ${color}; box-shadow: 0 0 10px ${color};">
+              <span style="font-size: 11px;">📡</span>
+              <span style="color: ${color}; font-weight: 800;">${st.lst}°C</span>
+              ${isKey ? `<span style="font-size: 9.5px; opacity: 0.85; margin-left: 2px;">${st.id}</span>` : ''}
+            </div>
+          </div>
+        `;
+
         const icon = L.divIcon({
-          className: 'custom-heat-pin',
-          html: `<div class="heat-point-marker" style="background:${color}; width:28px; height:28px;">${Math.round(p.gia_tri_lst)}°</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
+          className: 'station-radar-icon',
+          html: html,
+          iconSize: isKey ? [90, 32] : [60, 26],
+          iconAnchor: isKey ? [45, 16] : [30, 13]
         });
 
-        const marker = L.marker([p.vi_do, p.kinh_do], { icon });
-        marker.on('click', () => {
+        const marker = L.marker([st.lat, st.lng], { icon, zIndexOffset: isKey ? 1000 : 500 });
+
+        // Tooltip khi hover
+        marker.bindTooltip(`
+          <div style="font-family: system-ui; font-size: 11.5px; line-height: 1.45; color: #f8fafc; padding: 2px 4px;">
+            <div style="display: flex; align-items: center; gap: 5px; font-weight: 700; color: #38bdf8;">
+              <span>📡</span> ${st.ten}
+            </div>
+            <div style="font-size: 10.5px; color: #94a3b8;">Mã: ${st.ma} · ${st.khu_vuc}</div>
+            <div style="margin-top: 4px; display: flex; gap: 8px; font-weight: 600;">
+              <span>LST: <b style="color: ${color}">${st.lst} °C</b></span>
+              <span>NDVI: <b style="color: #10b981">${st.ndvi}</b></span>
+            </div>
+            <div style="font-size: 10px; color: #cbd5e1; margin-top: 3px;">${st.cam_bien}</div>
+          </div>
+        `, { className: 'glass-panel', sticky: true, opacity: 0.96 });
+
+        // Popup đầy đủ khi click
+        const popupContent = `
+          <div class="station-popup-card">
+            <div class="station-popup-header">
+              <span style="font-size: 20px;">📡</span>
+              <div>
+                <h4 class="station-popup-name">${st.ten}</h4>
+                <span style="font-size: 11px; color: #94a3b8;">${st.ma} · ${st.loai}</span>
+              </div>
+            </div>
+            <div class="station-popup-grid">
+              <div class="station-popup-cell">
+                <span class="station-popup-cell-label">Nhiệt độ LST</span>
+                <span class="station-popup-cell-val" style="color: ${color};">${st.lst} °C</span>
+              </div>
+              <div class="station-popup-cell">
+                <span class="station-popup-cell-label">Chỉ số thực vật NDVI</span>
+                <span class="station-popup-cell-val" style="color: #10b981;">${st.ndvi}</span>
+              </div>
+              <div class="station-popup-cell">
+                <span class="station-popup-cell-label">Khô hạn TVDI</span>
+                <span class="station-popup-cell-val" style="color: #f59e0b;">${st.tvdi}</span>
+              </div>
+              <div class="station-popup-cell">
+                <span class="station-popup-cell-label">Độ ẩm đất</span>
+                <span class="station-popup-cell-val" style="color: #06b6d4;">${st.humidity || 68}%</span>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: #cbd5e1; margin-bottom: 6px;">
+              • <b>Cảm biến:</b> ${st.cam_bien}<br/>
+              • <b>Độ cao & Vị trí:</b> ${st.do_cao} · (${st.lat.toFixed(4)}°N, ${st.lng.toFixed(4)}°E)<br/>
+              • <b>Đặc điểm:</b> ${st.dac_diem}
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+              <span style="font-size: 10.5px; color: #38bdf8; font-style: italic;">Đã đồng bộ quan trắc ${st.date}</span>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, {
+          className: 'station-popup',
+          maxWidth: 320,
+          closeButton: true
+        });
+
+        // Bắt sự kiện click
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          setSelectedDistrict(null);
           setSelectedPoint({
-            type: 'Quan trắc viễn thám',
-            date: p.thoi_gian,
-            lst: p.gia_tri_lst,
-            ndvi: p.ndvi,
-            rain: p.luong_mua,
-            humidity: p.do_am_dat,
-            lat: p.vi_do,
-            lng: p.kinh_do
+            type: `Trạm Quan Trắc Viễn Thám (${st.ma})`,
+            name: st.ten,
+            code: st.ma,
+            date: st.date,
+            lst: st.lst,
+            ndvi: st.ndvi,
+            tvdi: st.tvdi,
+            rain: st.rain,
+            humidity: st.humidity,
+            sensor: st.cam_bien,
+            note: st.dac_diem,
+            lat: st.lat,
+            lng: st.lng
           });
         });
 
@@ -675,7 +1260,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
         markersLayerRef.current.addLayer(marker);
       });
     }
-  }, [lstPoints, forecastPoints, showObservation, showForecast, selectedDateIdx]);
+  }, [lstPoints, khuVucLst, forecastPoints, showObservation, stationMode, showForecast, selectedDateIdx]);
 
   // Execute AI Training (Yêu cầu quyền ADMIN)
   const handleStartTraining = async () => {
@@ -794,6 +1379,83 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
     }
   };
 
+  // Nạp nhanh bộ dữ liệu nghiên cứu chuẩn GEE (1,150 dòng, 10 trạm TP.HCM)
+  const handleQuickLoadResearch = async () => {
+    if (!isAdmin) {
+      setPrepAlert({ type: 'error', msg: '🔒 Yêu cầu quyền ADMIN: Chỉ Quản trị viên mới được nạp bộ dữ liệu mới.' });
+      return;
+    }
+    setQuickLoadingResearch(true);
+    setPrepAlert(null);
+    try {
+      const res = await fetch(`${API_BASE}/datasets/quick-load-research`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders() }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Lỗi nạp bộ dữ liệu nghiên cứu');
+      setCsvReport(data.report);
+      setPrepAlert({ type: 'success', msg: `✅ ${data.message}` });
+      loadDatasets();
+    } catch (err) {
+      setPrepAlert({ type: 'error', msg: err.message });
+    } finally {
+      setQuickLoadingResearch(false);
+    }
+  };
+
+  // Chạy thử nghiệm Tiền xử lý trên CSDL thật (10,080 dòng)
+  const handleRunPipelineTest = async () => {
+    if (!isAdmin) {
+      setPrepAlert({ type: 'error', msg: '🔒 Yêu cầu quyền ADMIN: Chỉ Quản trị viên mới được kích hoạt pipeline trên CSDL.' });
+      return;
+    }
+    setPipelineLoading(true);
+    setPrepAlert(null);
+    try {
+      const q = new URLSearchParams({
+        ma_dataset: '1',
+        cach_xu_ly_thieu: prepMissing,
+        cach_xu_ly_nhieu: prepOutlier,
+        phuong_phap_chuan_hoa: prepNorm,
+        nguong_lst_max: String(prepThreshold),
+        train_end_year: String(prepTrainEndYear)
+      });
+      const res = await fetch(`${API_BASE}/tien-xu-ly/pipeline?${q.toString()}`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders() }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Lỗi chạy thử nghiệm tiền xử lý');
+      setPipelineReport(data);
+      setPrepAlert({
+        type: 'success',
+        msg: `🧪 Thử nghiệm tiền xử lý thành công trên ${data.data_split?.total_records?.toLocaleString() || 10080} bản ghi CSDL! Tỷ lệ phân chia: ${data.data_split?.split_ratio}`
+      });
+    } catch (err) {
+      setPrepAlert({ type: 'error', msg: err.message });
+    } finally {
+      setPipelineLoading(false);
+    }
+  };
+
+  // Lọc danh sách phường/xã theo điều kiện ngưỡng và từ khóa tìm kiếm (phản hồi tức thì)
+  const getFilteredStatsItems = () => {
+    let list = statsData.items || [];
+    // Lọc theo ngưỡng nếu người dùng chọn GTE hoặc LTE
+    if (statsCondition === 'GTE' && statsThreshold !== undefined && statsThreshold !== '') {
+      list = list.filter(it => Number(it.tb) >= Number(statsThreshold));
+    } else if (statsCondition === 'LTE' && statsThreshold !== undefined && statsThreshold !== '') {
+      list = list.filter(it => Number(it.tb) <= Number(statsThreshold));
+    }
+    // Lọc theo từ khóa tìm kiếm
+    if (statsSearchText && statsSearchText.trim()) {
+      const q = statsSearchText.trim().toLowerCase();
+      list = list.filter(it => it.khu_vuc.toLowerCase().includes(q));
+    }
+    return list;
+  };
+
   const currentDateInfo = timeline[selectedDateIdx] || {};
 
   return (
@@ -835,20 +1497,24 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
             <BarChart3 size={16} />
             Thống kê khu vực
           </button>
-          <button
-            className={`nav-tab-btn ${activeTab === 'datasets' ? 'active' : ''}`}
-            onClick={() => setActiveTab('datasets')}
-          >
-            <Database size={16} />
-            Nạp dữ liệu & Tiền xử lý
-          </button>
-          <button
-            className={`nav-tab-btn ${activeTab === 'training' ? 'active' : ''}`}
-            onClick={() => setActiveTab('training')}
-          >
-            <Cpu size={16} />
-            Huấn luyện AI Lab
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                className={`nav-tab-btn ${activeTab === 'datasets' ? 'active' : ''}`}
+                onClick={() => setActiveTab('datasets')}
+              >
+                <Database size={16} />
+                Nạp dữ liệu & Tiền xử lý
+              </button>
+              <button
+                className={`nav-tab-btn ${activeTab === 'training' ? 'active' : ''}`}
+                onClick={() => setActiveTab('training')}
+              >
+                <Cpu size={16} />
+                Huấn luyện AI Lab
+              </button>
+            </>
+          )}
           <button
             className={`nav-tab-btn ${activeTab === 'comparison' ? 'active' : ''}`}
             onClick={() => setActiveTab('comparison')}
@@ -864,15 +1530,24 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
               <div
                 className="user-badge clickable"
                 onClick={() => setProfileOpen(!profileOpen)}
-                title="Bấm để xem hồ sơ cá nhân"
+                title="Bấm để xem thông tin tài khoản"
               >
-                <div className="user-avatar">
-                  {(currentUser.ten_dang_nhap || 'U').substring(0, 2).toUpperCase()}
+                <div
+                  className="user-avatar"
+                  style={{
+                    backgroundColor: isAdmin ? '#ef4444' : '#0284c7',
+                    color: '#ffffff',
+                    fontWeight: 700
+                  }}
+                >
+                  {isAdmin ? 'AD' : 'ND'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '12px', fontWeight: 600 }}>{currentUser.ten_dang_nhap}</div>
-                  <div style={{ fontSize: '10px', color: 'var(--accent-emerald)' }}>
-                    ● {currentUser.vai_tro === 'ADMIN' ? 'Quản trị viên' : currentUser.vai_tro === 'CHUYEN_GIA' ? 'Chuyên gia' : 'Người xem'}
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
+                    {isAdmin ? 'Quản trị viên' : 'Người dùng'}
+                  </div>
+                  <div style={{ fontSize: '10px', color: isAdmin ? '#ef4444' : 'var(--accent-emerald)', fontWeight: 600 }}>
+                    ● {isAdmin ? 'Quyền Admin' : 'Khách xem'}
                   </div>
                 </div>
               </div>
@@ -920,10 +1595,183 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
       {/* 2. Main Body Tabs */}
       <main className="app-content">
-        {/* ================= TAB 1: WEBGIS VIEW ================= */}
-        {activeTab === 'gis' && (
-          <div className="gis-container">
-            <div ref={mapContainerRef} className="leaflet-container" />
+        {/* ================= TAB 1: WEBGIS VIEW (BẢN ĐỒ CHỦ ĐẠO LUÔN GIỮ TRONG DOM) ================= */}
+        <div className="gis-container" style={{ display: activeTab === 'gis' ? 'flex' : 'none' }}>
+          {/* Top Map Toolbar - Chuẩn theo thiết kế ảnh giao diện */}
+          <div className="gis-top-toolbar">
+            <div className="gis-toolbar-scope">
+              <MapPin size={13} color="#f97316" />
+              <span><strong>Phạm vi:</strong> TP.HCM (167 phường/xã) | <strong>Chuỗi dữ liệu:</strong> 2015 – 2026 (Landsat 8/9 & GEE)</span>
+            </div>
+
+            <div className="gis-toolbar-controls">
+              {/* Nút chuyển đổi 2D / 3D */}
+              <div className="map-mode-toggle">
+                <button
+                  type="button"
+                  className={`map-mode-btn ${mapMode === '2D' ? 'active' : ''}`}
+                  onClick={() => setMapMode('2D')}
+                >
+                  <MapIcon size={13} />
+                  <span>Bản đồ 2D</span>
+                </button>
+                <button
+                  type="button"
+                  className={`map-mode-btn ${mapMode === '3D' ? 'active mode-3d' : ''}`}
+                  onClick={() => setMapMode('3D')}
+                >
+                  <Globe size={13} />
+                  <span>Bản đồ 3D</span>
+                </button>
+              </div>
+
+              {/* Hệ số độ đùn 3D Extrusion Factor */}
+              {mapMode === '3D' && (
+                <div className="extrusion-toggle">
+                  <span className="extrusion-label">Độ đùn:</span>
+                  {[1.0, 1.5, 2.0].map(sc => (
+                    <button
+                      key={sc}
+                      type="button"
+                      className={`extrusion-btn ${extrusionScale === sc ? 'active' : ''}`}
+                      onClick={() => setExtrusionScale(sc)}
+                    >
+                      {sc}x
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Nút Toàn cảnh */}
+              <button
+                type="button"
+                className="gis-action-btn"
+                onClick={handleResetView}
+                title="Góc nhìn toàn cảnh TP.HCM"
+              >
+                <Maximize2 size={13} />
+                <span>Toàn cảnh</span>
+              </button>
+
+              {/* Nút Khung Bản đồ A4 */}
+              <button
+                type="button"
+                className="gis-action-btn frame"
+                onClick={() => setMapFrameOpen(true)}
+                title="Khung bản đồ chuẩn A4 in ấn / xuất báo cáo"
+              >
+                <Compass size={13} />
+                <span>Khung Bản đồ A4</span>
+              </button>
+
+              {/* Nút 167 Phường & Lọc ngưỡng */}
+              <button
+                type="button"
+                className={`gis-action-btn wards ${wardListOpen ? 'active' : ''}`}
+                onClick={() => setWardListOpen(true)}
+                title="Danh sách 167 phường & Lọc ngưỡng"
+              >
+                <ListFilter size={13} />
+                <span>167 Phường</span>
+                {thresholdFilter.enabled && <span className="filter-dot" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Khung bản đồ 2D Leaflet */}
+          <div
+            ref={mapContainerRef}
+            className="leaflet-container"
+            style={{ display: mapMode === '2D' ? 'block' : 'none' }}
+          />
+
+          {/* Khung bản đồ 3D Three.js đùn đa giác */}
+          {mapMode === '3D' && (
+            <div className="map-3d-wrapper">
+              <Map3DView
+                geoDistricts={geoDistricts}
+                khuVucLst={khuVucLst}
+                selectedIndicator={selectedIndicator}
+                extrusionScale={extrusionScale}
+                selectedWard={selectedDistrict}
+                onSelectWard={(w) => handleSelectWard(w.id || w.ma_khu_vuc)}
+                thresholdFilter={thresholdFilter}
+                currentDate={currentDateInfo.thoi_gian}
+                showObservation={showObservation}
+                stations={getStationsWithLST(TRAM_VIEN_THAM_HCM, khuVucLst, lstPoints, currentDateInfo.thoi_gian)}
+              />
+            </div>
+          )}
+
+          {/* Thanh hiển thị Toạ độ, Thước tỷ lệ và Thang màu trực tiếp trên bản đồ */}
+          <div className="in-map-cartography-bar">
+            <div className="in-map-coords">
+              <Compass size={13} color="#0891b2" />
+              <span>{mouseCoords.lat.toFixed(4)}° N, {mouseCoords.lng.toFixed(4)}° E</span>
+            </div>
+            <div className="in-map-scale">
+              <div className="mini-scale-ruler" />
+              <span>0 — 5 — 10 km</span>
+            </div>
+            <div className="in-map-legend">
+              <span className="in-map-legend-title">
+                {selectedIndicator === 'LST' ? 'Thang nhiệt LST (°C):' : selectedIndicator === 'NDVI' ? 'Thang NDVI:' : 'Thang TVDI:'}
+              </span>
+              <div className="in-map-legend-gradient">
+                <div
+                  className="legend-grad-bar"
+                  style={{
+                    background: selectedIndicator === 'LST'
+                      ? 'linear-gradient(90deg, #0000FF 0%, #0066FF 14.3%, #00FFFF 28.6%, #00FF00 42.9%, #FFFF00 57.1%, #FFCC00 71.4%, #FF6600 85.7%, #FF0000 100%)'
+                      : selectedIndicator === 'NDVI'
+                      ? 'linear-gradient(90deg, #FF0000 0%, #FF7F00 14.3%, #FFFF00 28.6%, #ADFF2F 42.9%, #00FF00 57.1%, #00FFFF 71.4%, #007FFF 85.7%, #0000FF 100%)'
+                      : 'linear-gradient(90deg, #066b00 0%, #0bc400 14.3%, #0ce100 28.6%, #00ff00 42.9%, #ffff00 57.1%, #ffcc00 71.4%, #ff6600 85.7%, #ff0000 100%)'
+                  }}
+                />
+                <div className="legend-grad-ticks">
+                  {selectedIndicator === 'LST' ? (
+                    <>
+                      <span>&lt;28°</span>
+                      <span>30°</span>
+                      <span>32°</span>
+                      <span>34°</span>
+                      <span>35.5°</span>
+                      <span>37°</span>
+                      <span>&gt;38.5°C</span>
+                    </>
+                  ) : selectedIndicator === 'NDVI' ? (
+                    <>
+                      <span>&lt;0.15</span>
+                      <span>0.25</span>
+                      <span>0.35</span>
+                      <span>0.45</span>
+                      <span>0.55</span>
+                      <span>0.65</span>
+                      <span>&gt;0.75</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>&lt;0.25</span>
+                      <span>0.35</span>
+                      <span>0.45</span>
+                      <span>0.55</span>
+                      <span>0.65</span>
+                      <span>0.75</span>
+                      <span>&gt;0.85</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* La bàn chỉ hướng Bắc trong khung bản đồ */}
+          <div className="in-map-compass">
+            <div className="north-arrow">
+              <span className="north-letter">N</span>
+              <div className="north-pointer">▲</div>
+            </div>
+          </div>
 
             {/* Floating Left GIS Panel: Controls & Layers */}
             <div className="gis-left-panel">
@@ -1019,8 +1867,103 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       checked={showObservation}
                       onChange={e => setShowObservation(e.target.checked)}
                     />
-                    <span>Hiển thị thêm điểm trạm quan trắc viễn thám</span>
+                    <span style={{ fontWeight: showObservation ? 700 : 400, color: showObservation ? '#38bdf8' : 'inherit' }}>
+                      Hiển thị thêm điểm trạm quan trắc viễn thám
+                    </span>
                   </label>
+
+                  {/* Bảng điều khiển phụ xuất hiện khi tick vào checkbox trạm quan trắc */}
+                  {showObservation && (
+                    <div className="station-subcontrols-panel">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '11px', color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Radio size={13} />
+                          Chế độ quan trắc viễn thám:
+                        </span>
+                        <span style={{ fontSize: '10.5px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '1px 6px', borderRadius: '10px', fontWeight: 600 }}>
+                          {stationMode === 'KEY' ? '10 Trạm Trọng Điểm' : '168 Điểm Lưới'}
+                        </span>
+                      </div>
+
+                      <div className="station-mode-toggle">
+                        <button
+                          type="button"
+                          className={`station-mode-btn ${stationMode === 'KEY' ? 'active' : ''}`}
+                          onClick={() => setStationMode('KEY')}
+                          title="10 trạm khí tượng & viễn thám mặt đất trọng điểm TP.HCM"
+                        >
+                          ⭐ 10 Trạm Trọng Điểm
+                        </button>
+                        <button
+                          type="button"
+                          className={`station-mode-btn ${stationMode === 'ALL' ? 'active' : ''}`}
+                          onClick={() => setStationMode('ALL')}
+                          title="168 điểm đo lưới viễn thám Landsat 8/9"
+                        >
+                          🌐 168 Điểm Lưới Landsat
+                        </button>
+                      </div>
+
+                      <div style={{ fontSize: '10.5px', color: '#94a3b8', lineHeight: '1.4' }}>
+                        {stationMode === 'KEY'
+                          ? '• Hiển thị 10 đài quan trắc chuẩn GEE & AWS với cảm biến Landsat 8/9 Band 10 TIRS, hiệu ứng radar phát sóng.'
+                          : '• Hiển thị 168 điểm ảnh viễn thám Landsat phủ kín các xã/phường.'}
+                      </div>
+
+                      {/* Danh sách nhanh 10 trạm để click zoom tới */}
+                      {stationMode === 'KEY' && (
+                        <div style={{ borderTop: '1px dashed rgba(255, 255, 255, 0.1)', paddingTop: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                            <span style={{ fontSize: '10.5px', fontWeight: 600, color: 'var(--text-dim)' }}>
+                              Tra cứu nhanh trạm:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setStationDrawerOpen(!stationDrawerOpen)}
+                              style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '10.5px', cursor: 'pointer', padding: 0 }}
+                            >
+                              {stationDrawerOpen ? 'Thu gọn ▲' : 'Xem danh sách ▼'}
+                            </button>
+                          </div>
+
+                          {stationDrawerOpen && (
+                            <div style={{ maxHeight: '160px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '3px', paddingRight: '2px' }}>
+                              {getStationsWithLST(TRAM_VIEN_THAM_HCM, khuVucLst, lstPoints, timeline[selectedDateIdx]?.thoi_gian).map(st => {
+                                const c = getLSTColor(st.lst);
+                                return (
+                                  <div
+                                    key={st.id}
+                                    onClick={() => handleFlyToStation(st)}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      padding: '4px 6px',
+                                      background: 'rgba(30, 41, 59, 0.6)',
+                                      borderRadius: '4px',
+                                      cursor: 'pointer',
+                                      fontSize: '11px',
+                                      transition: 'background 0.15s ease'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(56, 189, 248, 0.2)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(30, 41, 59, 0.6)'}
+                                    title={`Click để phóng to đến ${st.ten}`}
+                                  >
+                                    <span style={{ color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>
+                                      📡 {st.ten}
+                                    </span>
+                                    <span style={{ color: c, fontWeight: 800, fontFamily: 'JetBrains Mono', fontSize: '10.5px' }}>
+                                      {st.lst}°C
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
@@ -1047,10 +1990,10 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     className="legend-bar"
                     style={{
                       background: selectedIndicator === 'LST'
-                        ? 'linear-gradient(90deg, #3b82f6 0%, #10b981 30%, #facc15 60%, #f97316 85%, #ef4444 100%)'
+                        ? 'linear-gradient(90deg, #0000FF 0%, #0066FF 14.3%, #00FFFF 28.6%, #00FF00 42.9%, #FFFF00 57.1%, #FFCC00 71.4%, #FF6600 85.7%, #FF0000 100%)'
                         : selectedIndicator === 'NDVI'
-                        ? 'linear-gradient(90deg, #cbd5e1 0%, #facc15 25%, #a3e635 45%, #34d399 65%, #10b981 85%, #047857 100%)'
-                        : 'linear-gradient(90deg, #0ea5e9 0%, #06b6d4 35%, #f59e0b 60%, #ea580c 80%, #dc2626 100%)'
+                        ? 'linear-gradient(90deg, #FF0000 0%, #FF7F00 14.3%, #FFFF00 28.6%, #ADFF2F 42.9%, #00FF00 57.1%, #00FFFF 71.4%, #007FFF 85.7%, #0000FF 100%)'
+                        : 'linear-gradient(90deg, #066b00 0%, #0bc400 14.3%, #0ce100 28.6%, #00ff00 42.9%, #ffff00 57.1%, #ffcc00 71.4%, #ff6600 85.7%, #ff0000 100%)'
                     }}
                   />
                   {selectedIndicator === 'LST' && (
@@ -1058,41 +2001,41 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       <div className="legend-labels">
                         <span>&lt;28°C</span>
                         <span>32°C</span>
-                        <span>35°C</span>
-                        <span>&gt;37°C</span>
+                        <span>35.5°C</span>
+                        <span>&gt;38.5°C</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        <span>Mát mẻ</span>
-                        <span>Trung bình</span>
-                        <span style={{ color: '#ef4444', fontWeight: 600 }}>Cực nóng</span>
+                        <span style={{ color: '#0066FF', fontWeight: 600 }}>Rất mát mẻ</span>
+                        <span>Ổn định</span>
+                        <span style={{ color: '#FF0000', fontWeight: 700 }}>Đảo nhiệt UHI</span>
                       </div>
                     </>
                   )}
                   {selectedIndicator === 'NDVI' && (
                     <>
                       <div className="legend-labels">
-                        <span>0.00</span>
-                        <span>0.28</span>
+                        <span>&lt;0.15</span>
+                        <span>0.35</span>
                         <span>0.55</span>
-                        <span>0.80+</span>
+                        <span>&gt;0.75</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        <span style={{ color: '#64748b' }}>Đô thị / Đất trống</span>
-                        <span style={{ color: '#047857', fontWeight: 600 }}>Rừng / Cây xanh dày</span>
+                        <span style={{ color: '#FF0000', fontWeight: 600 }}>Bê tông / Đất trống</span>
+                        <span style={{ color: '#0000FF', fontWeight: 700 }}>Rừng rậm / Cây xanh dày</span>
                       </div>
                     </>
                   )}
                   {selectedIndicator === 'TVDI' && (
                     <>
                       <div className="legend-labels">
-                        <span>0.00</span>
-                        <span>0.35</span>
+                        <span>&lt;0.25</span>
+                        <span>0.45</span>
                         <span>0.65</span>
-                        <span>1.00</span>
+                        <span>&gt;0.85</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                        <span style={{ color: '#0ea5e9', fontWeight: 600 }}>Rất ẩm / Mặt nước</span>
-                        <span style={{ color: '#dc2626', fontWeight: 600 }}>Khô hạn nặng</span>
+                        <span style={{ color: '#066b00', fontWeight: 600 }}>Rất ẩm / Đủ nước</span>
+                        <span style={{ color: '#ff0000', fontWeight: 700 }}>Khô hạn gay gắt</span>
                       </div>
                     </>
                   )}
@@ -1260,6 +2203,12 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Phân loại:</span>
                       <span style={{ fontWeight: 600, fontSize: '12px', color: 'var(--accent-sky)' }}>{selectedPoint.type}</span>
                     </div>
+                    {selectedPoint.name && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Tên trạm:</span>
+                        <span style={{ fontWeight: 700, fontSize: '12px', color: '#f8fafc' }}>{selectedPoint.name}</span>
+                      </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Thời gian:</span>
                       <span style={{ fontWeight: 600, fontSize: '12px' }}>{selectedPoint.date}</span>
@@ -1274,20 +2223,37 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Chỉ số thực vật (NDVI):</span>
                       <span style={{ fontWeight: 600, fontSize: '12px', color: '#10b981' }}>{selectedPoint.ndvi}</span>
                     </div>
-                    {selectedPoint.rain !== undefined && (
+                    {selectedPoint.tvdi !== undefined && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Khô hạn (TVDI):</span>
+                        <span style={{ fontWeight: 600, fontSize: '12px', color: '#f59e0b' }}>{selectedPoint.tvdi}</span>
+                      </div>
+                    )}
+                    {selectedPoint.sensor && (
+                      <div style={{ fontSize: '11px', color: '#cbd5e1', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>Cảm biến viễn thám:</span>
+                        <b>{selectedPoint.sensor}</b>
+                      </div>
+                    )}
+                    {selectedPoint.note && (
+                      <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
+                        {selectedPoint.note}
+                      </div>
+                    )}
+                    {selectedPoint.rain !== undefined && selectedPoint.rain !== null && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Lượng mưa:</span>
                         <span style={{ fontWeight: 600, fontSize: '12px' }}>{selectedPoint.rain} mm</span>
                       </div>
                     )}
-                    {selectedPoint.humidity !== undefined && (
+                    {selectedPoint.humidity !== undefined && selectedPoint.humidity !== null && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '6px' }}>
                         <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Độ ẩm đất:</span>
                         <span style={{ fontWeight: 600, fontSize: '12px' }}>{selectedPoint.humidity}%</span>
                       </div>
                     )}
                     <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px' }}>
-                      Tọa độ: {selectedPoint.lat.toFixed(3)}°N, {selectedPoint.lng.toFixed(3)}°E
+                      Tọa độ WGS84: {selectedPoint.lat.toFixed(4)}°N, {selectedPoint.lng.toFixed(4)}°E
                     </div>
                   </div>
                 </div>
@@ -1479,127 +2445,425 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
               </div>
             )}
           </div>
-        )}
 
-        {/* ================= TAB: THỐNG KÊ KHU VỰC (Chuẩn theo Ảnh 1 & Ảnh 2) ================= */}
+        {/* ================= TAB: THỐNG KÊ KHU VỰC (Làm lại logic theo Ảnh 5) ================= */}
         {activeTab === 'statistics' && (
           <div style={{ flex: 1, padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', background: '#f8fafc' }}>
             
-            {/* 1. Hàng bộ lọc trên cùng (Chỉ số, Tháng, Nguồn, Ngưỡng trên) - Y hệt Ảnh 1 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', background: '#ffffff', padding: '12px 20px', borderRadius: '10px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', flexWrap: 'wrap' }}>
-              
-              {/* Chỉ số */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Chỉ số</label>
-                <select
-                  value={statsIndicator}
-                  onChange={(e) => setStatsIndicator(e.target.value)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    background: '#ffffff',
-                    cursor: 'pointer',
-                    minWidth: '90px'
-                  }}
-                >
-                  <option value="LST">LST</option>
-                  <option value="NDVI">NDVI</option>
-                  <option value="TVDI">TVDI</option>
-                </select>
-              </div>
-
-              {/* Tháng */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tháng</label>
-                <select
-                  value={statsMonth || (timeline[selectedDateIdx]?.thoi_gian?.substring(0, 7)) || '2025-12'}
-                  onChange={(e) => setStatsMonth(e.target.value)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    background: '#ffffff',
-                    cursor: 'pointer',
-                    minWidth: '120px'
-                  }}
-                >
-                  {timeline && timeline.length > 0 ? (
-                    // Lấy danh sách các tháng duy nhất từ timeline
-                    Array.from(new Set(timeline.map(t => t.thoi_gian?.substring(0, 7)).filter(Boolean)))
-                      .sort()
-                      .reverse()
-                      .map(m => {
-                        const [y, mon] = m.split('-');
-                        return (
-                          <option key={m} value={m}>
-                            {mon}/{y}
-                          </option>
-                        );
-                      })
-                  ) : (
-                    <option value="2025-12">12/2025</option>
-                  )}
-                </select>
-              </div>
-
-              {/* Nguồn */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Nguồn</label>
-                <select
-                  value={statsSource}
-                  onChange={(e) => setStatsSource(e.target.value)}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    background: '#ffffff',
-                    cursor: 'pointer',
-                    minWidth: '150px'
-                  }}
-                >
-                  <option value="GEE / AI dự báo">GEE / AI dự báo</option>
-                  <option value="Landsat/MODIS">Landsat/MODIS Gốc</option>
-                  <option value="Mô hình GCN-LSTM">Mô hình GCN-LSTM</option>
-                </select>
-              </div>
-
-              {/* Ngưỡng trên */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Ngưỡng trên</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={statsThreshold}
-                  onChange={(e) => setStatsThreshold(Number(e.target.value))}
-                  style={{
-                    width: '80px',
-                    padding: '6px 10px',
-                    borderRadius: '6px',
-                    border: '1px solid #cbd5e1',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    background: '#ffffff'
-                  }}
-                />
-              </div>
-
-              {statsLoading && (
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#0891b2', fontWeight: 600 }}>
-                  <div className="spinner" style={{ width: '14px', height: '14px' }} />
-                  Đang tổng hợp dữ liệu...
+            {/* 1. Hàng bộ lọc trên cùng (Chỉ số, Tháng, Nguồn, Điều kiện, Ngưỡng, Tìm kiếm) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: '#ffffff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                
+                {/* Chỉ số */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Chỉ số quan trắc</label>
+                  <select
+                    value={statsIndicator}
+                    onChange={(e) => {
+                      const newInd = e.target.value;
+                      setStatsIndicator(newInd);
+                      if (newInd === 'LST') setStatsThreshold(35);
+                      else if (newInd === 'NDVI') setStatsThreshold(0.25);
+                      else setStatsThreshold(0.60);
+                    }}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      cursor: 'pointer',
+                      minWidth: '100px'
+                    }}
+                  >
+                    <option value="LST">LST (Nhiệt độ °C)</option>
+                    <option value="NDVI">NDVI (Thực vật)</option>
+                    <option value="TVDI">TVDI (Khô hạn)</option>
+                  </select>
                 </div>
-              )}
+
+                {/* Tháng */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tháng quan trắc</label>
+                  <select
+                    value={statsMonth || (timeline[selectedDateIdx]?.thoi_gian?.substring(0, 7)) || '2025-12'}
+                    onChange={(e) => setStatsMonth(e.target.value)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      cursor: 'pointer',
+                      minWidth: '120px'
+                    }}
+                  >
+                    {timeline && timeline.length > 0 ? (
+                      Array.from(new Set(timeline.map(t => t.thoi_gian?.substring(0, 7)).filter(Boolean)))
+                        .sort()
+                        .reverse()
+                        .map(m => {
+                          const [y, mon] = m.split('-');
+                          return (
+                            <option key={m} value={m}>
+                              Tháng {mon}/{y}
+                            </option>
+                          );
+                        })
+                    ) : (
+                      <option value="2025-12">Tháng 12/2025</option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Nguồn */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Nguồn viễn thám</label>
+                  <select
+                    value={statsSource}
+                    onChange={(e) => setStatsSource(e.target.value)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      cursor: 'pointer',
+                      minWidth: '160px'
+                    }}
+                  >
+                    <option value="GEE / AI dự báo">GEE / AI dự báo</option>
+                    <option value="Landsat/MODIS">Landsat/MODIS Gốc</option>
+                    <option value="Mô hình GCN-LSTM">Mô hình GCN-LSTM</option>
+                  </select>
+                </div>
+
+                {/* Điều kiện lọc ngưỡng */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Điều kiện lọc</label>
+                  <select
+                    value={statsCondition}
+                    onChange={(e) => setStatsCondition(e.target.value)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: '#0f172a',
+                      background: '#ffffff',
+                      cursor: 'pointer',
+                      minWidth: '140px'
+                    }}
+                  >
+                    <option value="ALL">Tất cả (167 phường)</option>
+                    <option value="GTE">Lớn hơn hoặc bằng (≥)</option>
+                    <option value="LTE">Nhỏ hơn hoặc bằng (≤)</option>
+                  </select>
+                </div>
+
+                {/* Giá trị ngưỡng (chỉ bật khi không chọn ALL) */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                    Ngưỡng {statsIndicator === 'LST' ? '(°C)' : '(0.0 - 1.0)'}
+                  </label>
+                  <input
+                    type="number"
+                    step={statsIndicator === 'LST' ? '0.5' : '0.05'}
+                    min={statsIndicator === 'LST' ? '20' : '0.0'}
+                    max={statsIndicator === 'LST' ? '50' : '1.0'}
+                    disabled={statsCondition === 'ALL'}
+                    value={statsThreshold}
+                    onChange={(e) => setStatsThreshold(Number(e.target.value))}
+                    style={{
+                      width: '90px',
+                      padding: '7px 10px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      color: statsCondition === 'ALL' ? '#94a3b8' : '#0f172a',
+                      background: statsCondition === 'ALL' ? '#f1f5f9' : '#ffffff'
+                    }}
+                  />
+                </div>
+
+                {/* Ô tìm kiếm nhanh phường/xã */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '180px' }}>
+                  <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Tìm tên phường/xã</label>
+                  <input
+                    type="text"
+                    placeholder="Gõ tên để tìm nhanh..."
+                    value={statsSearchText}
+                    onChange={(e) => setStatsSearchText(e.target.value)}
+                    style={{
+                      padding: '7px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '13px',
+                      color: '#0f172a',
+                      background: '#ffffff'
+                    }}
+                  />
+                </div>
+
+                {statsLoading && (
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#0891b2', fontWeight: 600 }}>
+                    <div className="spinner" style={{ width: '14px', height: '14px' }} />
+                    Đang tổng hợp...
+                  </div>
+                )}
+              </div>
+
+              {/* Hàng nút gợi ý ngưỡng nhanh khoa học (Presets) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px dashed #e2e8f0', paddingTop: '10px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b' }}>Gợi ý ngưỡng:</span>
+                
+                {statsIndicator === 'LST' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('ALL'); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #cbd5e1',
+                        background: statsCondition === 'ALL' ? '#0891b2' : '#ffffff',
+                        color: statsCondition === 'ALL' ? '#ffffff' : '#334155'
+                      }}
+                    >
+                      Tất cả
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(35); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #facc15',
+                        background: statsCondition === 'GTE' && statsThreshold === 35 ? '#facc15' : '#fffbeb',
+                        color: '#b45309'
+                      }}
+                    >
+                      ≥ 35.0 °C (Ấm áp)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(37); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #fb923c',
+                        background: statsCondition === 'GTE' && statsThreshold === 37 ? '#fb923c' : '#fff7ed',
+                        color: statsCondition === 'GTE' && statsThreshold === 37 ? '#ffffff' : '#c2410c'
+                      }}
+                    >
+                      ≥ 37.0 °C (Nắng nóng)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(38); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #f87171',
+                        background: statsCondition === 'GTE' && statsThreshold === 38 ? '#ef4444' : '#fef2f2',
+                        color: statsCondition === 'GTE' && statsThreshold === 38 ? '#ffffff' : '#b91c1c'
+                      }}
+                    >
+                      ≥ 38.0 °C (Đảo nhiệt cao)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('LTE'); setStatsThreshold(33); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #60a5fa',
+                        background: statsCondition === 'LTE' && statsThreshold === 33 ? '#3b82f6' : '#eff6ff',
+                        color: statsCondition === 'LTE' && statsThreshold === 33 ? '#ffffff' : '#1d4ed8'
+                      }}
+                    >
+                      ≤ 33.0 °C (Vùng dịu mát)
+                    </button>
+                  </>
+                )}
+
+                {statsIndicator === 'NDVI' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('ALL'); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #cbd5e1',
+                        background: statsCondition === 'ALL' ? '#0891b2' : '#ffffff',
+                        color: statsCondition === 'ALL' ? '#ffffff' : '#334155'
+                      }}
+                    >
+                      Tất cả
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('LTE'); setStatsThreshold(0.20); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #f87171',
+                        background: statsCondition === 'LTE' && statsThreshold === 0.20 ? '#ef4444' : '#fef2f2',
+                        color: statsCondition === 'LTE' && statsThreshold === 0.20 ? '#ffffff' : '#b91c1c'
+                      }}
+                    >
+                      ≤ 0.20 (Bê tông hóa nặng / Thiếu cây)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('LTE'); setStatsThreshold(0.30); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #fbbf24',
+                        background: statsCondition === 'LTE' && statsThreshold === 0.30 ? '#f59e0b' : '#fffbeb',
+                        color: statsCondition === 'LTE' && statsThreshold === 0.30 ? '#ffffff' : '#b45309'
+                      }}
+                    >
+                      ≤ 0.30 (Mảng xanh thưa)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(0.45); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #34d399',
+                        background: statsCondition === 'GTE' && statsThreshold === 0.45 ? '#10b981' : '#ecfdf5',
+                        color: statsCondition === 'GTE' && statsThreshold === 0.45 ? '#ffffff' : '#047857'
+                      }}
+                    >
+                      ≥ 0.45 (Cây xanh bao phủ tốt)
+                    </button>
+                  </>
+                )}
+
+                {statsIndicator === 'TVDI' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('ALL'); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #cbd5e1',
+                        background: statsCondition === 'ALL' ? '#0891b2' : '#ffffff',
+                        color: statsCondition === 'ALL' ? '#ffffff' : '#334155'
+                      }}
+                    >
+                      Tất cả
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(0.60); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #fbbf24',
+                        background: statsCondition === 'GTE' && statsThreshold === 0.60 ? '#f59e0b' : '#fffbeb',
+                        color: statsCondition === 'GTE' && statsThreshold === 0.60 ? '#ffffff' : '#b45309'
+                      }}
+                    >
+                      ≥ 0.60 (Khô hạn vừa)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(0.70); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #fb923c',
+                        background: statsCondition === 'GTE' && statsThreshold === 0.70 ? '#ea580c' : '#fff7ed',
+                        color: statsCondition === 'GTE' && statsThreshold === 0.70 ? '#ffffff' : '#c2410c'
+                      }}
+                    >
+                      ≥ 0.70 (Khô hạn nặng)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('GTE'); setStatsThreshold(0.80); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #f87171',
+                        background: statsCondition === 'GTE' && statsThreshold === 0.80 ? '#dc2626' : '#fef2f2',
+                        color: statsCondition === 'GTE' && statsThreshold === 0.80 ? '#ffffff' : '#991b1b'
+                      }}
+                    >
+                      ≥ 0.80 (Cực kỳ khô cằn)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setStatsCondition('LTE'); setStatsThreshold(0.40); }}
+                      style={{
+                        padding: '3px 9px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border: '1px solid #38bdf8',
+                        background: statsCondition === 'LTE' && statsThreshold === 0.40 ? '#0284c7' : '#f0f9ff',
+                        color: statsCondition === 'LTE' && statsThreshold === 0.40 ? '#ffffff' : '#0369a1'
+                      }}
+                    >
+                      ≤ 0.40 (Đủ độ ẩm đất)
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* 2. Bố cục 2 cột chính: Cột trái (Biểu đồ thanh ngang) & Cột phải (Bảng thống kê) */}
@@ -1607,43 +2871,71 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
               
               {/* CỘT TRÁI: GIÁ TRỊ TRUNG BÌNH THEO KHU VỰC (HORIZONTAL BAR CHART) */}
               <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: '0 0 16px 0' }}>
-                  Giá trị trung bình theo khu vực ({statsIndicator})
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                    Giá trị trung bình theo khu vực ({statsIndicator})
+                  </h3>
+                  {(() => {
+                    const filtered = getFilteredStatsItems();
+                    return (
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#0891b2', background: '#ecfeff', padding: '3px 8px', borderRadius: '12px' }}>
+                        {filtered.length} / 167 phường {statsCondition !== 'ALL' ? `(${statsCondition === 'GTE' ? '≥' : '≤'} ${statsThreshold}${statsIndicator === 'LST' ? '°C' : ''})` : ''}
+                      </span>
+                    );
+                  })()}
+                </div>
 
-                {/* Container biểu đồ thanh ngang cuộn nếu có nhiều khu vực */}
+                {/* Container biểu đồ thanh ngang cuộn */}
                 <div style={{ flex: 1, overflowY: 'auto', paddingRight: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {(() => {
-                    const items = statsData.items || [];
+                    const items = getFilteredStatsItems();
+
                     if (items.length === 0) {
-                      return <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '20px' }}>Chưa có dữ liệu thống kê</div>;
+                      return (
+                        <div style={{ color: '#94a3b8', fontStyle: 'italic', padding: '30px 10px', textAlign: 'center' }}>
+                          Không có phường/xã nào thỏa mãn điều kiện lọc {statsCondition !== 'ALL' ? `(${statsCondition === 'GTE' ? '≥' : '≤'} ${statsThreshold}${statsIndicator === 'LST' ? '°C' : ''})` : ''}.
+                        </div>
+                      );
                     }
 
-                    // Tìm min / max cho trục X
-                    const values = items.map(it => Number(it.tb));
-                    const minVal = Math.min(...values);
-                    const maxVal = Math.max(...values);
-                    const domainMin = Math.max(0, Math.floor(minVal - 1));
-                    const domainMax = Math.ceil(maxVal + 1);
-                    const range = Math.max(1, domainMax - domainMin);
+                    // Thang đo khoa học theo từng chỉ số
+                    let domainMin = 0;
+                    let domainMax = 1;
+                    if (statsIndicator === 'LST') {
+                      domainMin = 24;
+                      domainMax = 42;
+                    } else if (statsIndicator === 'NDVI') {
+                      domainMin = 0.0;
+                      domainMax = 0.9;
+                    } else { // TVDI
+                      domainMin = 0.0;
+                      domainMax = 1.0;
+                    }
+                    const range = domainMax - domainMin;
 
                     return items.map((item, idx) => {
                       const val = Number(item.tb);
-                      const pct = Math.max(8, Math.min(100, ((val - domainMin) / range) * 100));
+                      const pct = Math.max(6, Math.min(100, ((val - domainMin) / range) * 100));
                       const isHovered = hoveredBar === item.id;
 
-                      // Bảng màu gradient thanh ngang: Màu vàng cam dịu nếu giá trị cao, xanh lam nếu giá trị mát
-                      let barColor = '#facc15';
+                      // Màu sắc thanh ngang theo từng chỉ số
+                      let barColor = '#0284c7';
                       if (statsIndicator === 'LST') {
-                        if (val >= 36) barColor = '#ef4444';
-                        else if (val >= 34) barColor = '#f97316';
-                        else if (val >= 32) barColor = '#facc15';
-                        else if (val >= 30) barColor = '#93c5fd';
-                        else barColor = '#3b82f6';
+                        if (val >= 37.0) barColor = '#ef4444';
+                        else if (val >= 35.5) barColor = '#f97316';
+                        else if (val >= 33.5) barColor = '#eab308';
+                        else if (val >= 31.0) barColor = '#60a5fa';
+                        else barColor = '#38bdf8';
                       } else if (statsIndicator === 'NDVI') {
-                        barColor = val >= 0.6 ? '#10b981' : val >= 0.4 ? '#34d399' : val >= 0.25 ? '#fde047' : '#cbd5e1';
-                      } else {
-                        barColor = val >= 0.7 ? '#ea580c' : val >= 0.5 ? '#f59e0b' : '#38bdf8';
+                        if (val >= 0.45) barColor = '#10b981';
+                        else if (val >= 0.30) barColor = '#34d399';
+                        else if (val >= 0.20) barColor = '#eab308';
+                        else barColor = '#cbd5e1';
+                      } else { // TVDI
+                        if (val >= 0.75) barColor = '#dc2626';
+                        else if (val >= 0.60) barColor = '#ea580c';
+                        else if (val >= 0.45) barColor = '#f59e0b';
+                        else barColor = '#0284c7';
                       }
 
                       return (
@@ -1661,7 +2953,18 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           }}
                         >
                           {/* Tên khu vực */}
-                          <div style={{ width: '130px', textAlign: 'right', fontWeight: isHovered ? 700 : 500, color: isHovered ? '#0891b2' : '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.khu_vuc}>
+                          <div
+                            style={{
+                              width: '125px',
+                              textAlign: 'right',
+                              fontWeight: isHovered ? 700 : 500,
+                              color: isHovered ? '#0891b2' : '#334155',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }}
+                            title={item.khu_vuc}
+                          >
                             {item.khu_vuc}
                           </div>
 
@@ -1674,7 +2977,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                                 background: barColor,
                                 borderRadius: '4px',
                                 transition: 'width 0.4s ease',
-                                opacity: isHovered ? 1 : 0.85
+                                opacity: isHovered ? 1 : 0.88
                               }}
                             />
                           </div>
@@ -1684,22 +2987,21 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                             <div
                               style={{
                                 position: 'absolute',
-                                left: `calc(142px + ${pct * 0.6}%)`,
-                                top: '-24px',
-                                background: '#1e293b',
+                                left: `calc(137px + ${pct * 0.55}%)`,
+                                top: '-28px',
+                                background: '#0f172a',
                                 color: '#ffffff',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
                                 fontSize: '11px',
                                 fontWeight: 600,
-                                zIndex: 10,
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+                                zIndex: 20,
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
                                 pointerEvents: 'none',
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              <div>{item.khu_vuc}</div>
-                              <div style={{ color: barColor }}>{statsIndicator}: {val} {statsIndicator === 'LST' ? '°C' : ''}</div>
+                              <span style={{ color: '#38bdf8' }}>{item.khu_vuc}:</span> {val} {statsIndicator === 'LST' ? '°C' : ''} · Diện tích: {item.dien_tich_km2} km²
                             </div>
                           )}
                         </div>
@@ -1708,30 +3010,37 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   })()}
                 </div>
 
-                {/* Trục X số liệu dưới chân biểu đồ (Ảnh 1: 24.7 ... 28 ... 32 ... 34) */}
-                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', paddingLeft: '142px', fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
-                  {(() => {
-                    const items = statsData.items || [];
-                    const values = items.map(it => Number(it.tb));
-                    if (values.length === 0) return null;
-                    const minVal = Math.min(...values);
-                    const maxVal = Math.max(...values);
-                    const dMin = Math.max(0, Math.floor(minVal - 1));
-                    const dMax = Math.ceil(maxVal + 1);
-                    const step = Math.round((dMax - dMin) / 4) || 1;
-                    const ticks = [];
-                    for (let t = dMin; t <= dMax; t += step) ticks.push(t);
-                    return ticks.map(tick => <span key={tick}>{tick}</span>);
-                  })()}
+                {/* Trục X số liệu dưới chân biểu đồ */}
+                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '8px', marginTop: '12px', display: 'flex', justifyContent: 'space-between', paddingLeft: '137px', fontSize: '11px', color: '#64748b', fontWeight: 600 }}>
+                  {statsIndicator === 'LST' ? (
+                    <>
+                      <span>24°C</span>
+                      <span>28°C</span>
+                      <span>32°C</span>
+                      <span>36°C</span>
+                      <span>40°C</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>0.0</span>
+                      <span>0.25</span>
+                      <span>0.50</span>
+                      <span>0.75</span>
+                      <span>1.0</span>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* CỘT PHẢI: BẢNG THỐNG KÊ (TABLE VIEW THEO ẢNH 1) */}
+              {/* CỘT PHẢI: BẢNG THỐNG KÊ CHI TIẾT (TABLE VIEW) */}
               <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px 12px 20px', borderBottom: '1px solid #f1f5f9' }}>
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                    Bảng thống kê
+                    Bảng thống kê chi tiết
                   </h3>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    Đơn vị: <b>{statsIndicator === 'LST' ? '°C' : 'Chỉ số (0-1)'}</b>
+                  </div>
                 </div>
 
                 {/* Table Scrollable Container */}
@@ -1753,40 +3062,48 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         </th>
                         <th
                           onClick={() => { setStatsSortCol('min'); setStatsSortAsc(!statsSortAsc); }}
-                          style={{ padding: '10px 10px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '10px 8px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           MIN {statsSortCol === 'min' && (statsSortAsc ? '▲' : '▼')}
                         </th>
                         <th
                           onClick={() => { setStatsSortCol('max'); setStatsSortAsc(!statsSortAsc); }}
-                          style={{ padding: '10px 10px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          style={{ padding: '10px 8px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           MAX {statsSortCol === 'max' && (statsSortAsc ? '▲' : '▼')}
                         </th>
-                        <th style={{ padding: '10px 10px', fontWeight: 700, whiteSpace: 'nowrap' }}>ĐỘ LỆCH</th>
+                        <th style={{ padding: '10px 8px', fontWeight: 700, whiteSpace: 'nowrap' }}>ĐỘ LỆCH</th>
                         <th
                           onClick={() => { setStatsSortCol('dien_tich_km2'); setStatsSortAsc(!statsSortAsc); }}
                           style={{ padding: '10px 10px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                         >
                           DIỆN TÍCH (KM²) {statsSortCol === 'dien_tich_km2' && (statsSortAsc ? '▲' : '▼')}
                         </th>
-                        <th style={{ padding: '10px 10px', fontWeight: 700, whiteSpace: 'nowrap' }}>%</th>
+                        <th style={{ padding: '10px 10px', fontWeight: 700, whiteSpace: 'nowrap' }}>% DIỆN TÍCH</th>
+                        <th style={{ padding: '10px 10px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center' }}>MỨC ĐỘ</th>
                         <th style={{ padding: '10px 14px', fontWeight: 700, whiteSpace: 'nowrap' }}>Δ CÙNG KỲ</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Dòng tổng hợp đặc biệt: Toàn TP.HCM (Giống hàng nổi bật trong Ảnh 1) */}
-                      {statsData.city_summary && (
+                      {/* Dòng tổng hợp đặc biệt: Toàn TP.HCM */}
+                      {statsData.city_summary && !statsSearchText && (
                         <tr style={{ background: '#f1f5f9', fontWeight: 700, color: '#0f172a', borderTop: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>
                           <td style={{ padding: '10px 14px', textAlign: 'left', color: '#0891b2' }}>
                             {statsData.city_summary.khu_vuc}
                           </td>
-                          <td style={{ padding: '10px 10px', color: '#ea580c' }}>{statsData.city_summary.tb}</td>
-                          <td style={{ padding: '10px 10px' }}>{statsData.city_summary.min}</td>
-                          <td style={{ padding: '10px 10px' }}>{statsData.city_summary.max}</td>
-                          <td style={{ padding: '10px 10px' }}>{statsData.city_summary.do_lech}</td>
+                          <td style={{ padding: '10px 10px', color: '#ea580c' }}>
+                            {statsData.city_summary.tb} {statsIndicator === 'LST' ? '°C' : ''}
+                          </td>
+                          <td style={{ padding: '10px 8px' }}>{statsData.city_summary.min}</td>
+                          <td style={{ padding: '10px 8px' }}>{statsData.city_summary.max}</td>
+                          <td style={{ padding: '10px 8px' }}>{statsData.city_summary.do_lech}</td>
                           <td style={{ padding: '10px 10px' }}>{statsData.city_summary.dien_tich_km2}</td>
-                          <td style={{ padding: '10px 10px' }}>{statsData.city_summary.phan_tram_nguy_co}%</td>
+                          <td style={{ padding: '10px 10px' }}>100%</td>
+                          <td style={{ padding: '10px 10px', textAlign: 'center' }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#e0f2fe', color: '#0369a1' }}>
+                              ĐÔ THỊ
+                            </span>
+                          </td>
                           <td style={{ padding: '10px 14px', color: statsData.city_summary.delta_cung_ky >= 0 ? '#ef4444' : '#10b981' }}>
                             {statsData.city_summary.delta_cung_ky > 0 ? `+${statsData.city_summary.delta_cung_ky}` : statsData.city_summary.delta_cung_ky}
                           </td>
@@ -1795,7 +3112,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
                       {/* Danh sách từng phường / xã */}
                       {(() => {
-                        const items = (statsData.items || []).slice();
+                        const items = getFilteredStatsItems().slice();
+
                         items.sort((a, b) => {
                           let va = a[statsSortCol];
                           let vb = b[statsSortCol];
@@ -1807,44 +3125,77 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           return statsSortAsc ? va - vb : vb - va;
                         });
 
-                        return items.map((row, idx) => (
-                          <tr
-                            key={row.id || idx}
-                            style={{
-                              borderBottom: '1px solid #f1f5f9',
-                              transition: 'background 0.15s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
-                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                          >
-                            <td style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#334155' }}>
-                              {row.khu_vuc}
-                            </td>
-                            <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0f172a' }}>
-                              {row.tb}
-                            </td>
-                            <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.min}</td>
-                            <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.max}</td>
-                            <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.do_lech}</td>
-                            <td style={{ padding: '8px 10px', color: '#64748b' }}>{row.dien_tich_km2}</td>
-                            <td style={{ padding: '8px 10px', color: row.phan_tram_nguy_co > 0 ? '#ef4444' : '#64748b' }}>
-                              {row.phan_tram_nguy_co}%
-                            </td>
-                            <td style={{ padding: '8px 14px', fontWeight: 600, color: row.delta_cung_ky >= 0 ? '#ef4444' : '#10b981' }}>
-                              {row.delta_cung_ky > 0 ? `+${row.delta_cung_ky}` : row.delta_cung_ky}
-                            </td>
-                          </tr>
-                        ));
+                        if (items.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan="9" style={{ padding: '30px', textAlign: 'center', color: '#94a3b8', fontStyle: 'italic' }}>
+                                Không có phường/xã nào thỏa mãn điều kiện lọc {statsCondition !== 'ALL' ? `(${statsCondition === 'GTE' ? '≥' : '≤'} ${statsThreshold}${statsIndicator === 'LST' ? '°C' : ''})` : ''}.
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return items.map((row, idx) => {
+                          const areaVal = Number(row.dien_tich_km2);
+                          const areaFormatted = isNaN(areaVal) ? row.dien_tich_km2 : areaVal.toFixed(2);
+                          const pctArea = row.phan_tram_dien_tich ? `${row.phan_tram_dien_tich}%` : `${row.phan_tram_nguy_co || 0}%`;
+
+                          // Mức độ cảnh báo
+                          const warn = row.muc_do_canh_bao || 'AN_TOAN';
+                          const warnBadge = warn === 'CAO' ? (
+                            <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#b91c1c' }}>
+                              NGUY CƠ CAO
+                            </span>
+                          ) : warn === 'TRUNG_BINH' ? (
+                            <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 700, background: '#fef3c7', color: '#b45309' }}>
+                              CẢNH BÁO
+                            </span>
+                          ) : (
+                            <span style={{ padding: '2px 8px', borderRadius: '10px', fontSize: '10px', fontWeight: 600, background: '#ecfdf5', color: '#047857' }}>
+                              AN TOÀN
+                            </span>
+                          );
+
+                          return (
+                            <tr
+                              key={row.id || idx}
+                              style={{
+                                borderBottom: '1px solid #f1f5f9',
+                                transition: 'background 0.15s'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <td style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 600, color: '#334155' }}>
+                                {row.khu_vuc}
+                              </td>
+                              <td style={{ padding: '8px 10px', fontWeight: 700, color: '#0f172a' }}>
+                                {row.tb}
+                              </td>
+                              <td style={{ padding: '8px 8px', color: '#64748b' }}>{row.min}</td>
+                              <td style={{ padding: '8px 8px', color: '#64748b' }}>{row.max}</td>
+                              <td style={{ padding: '8px 8px', color: '#64748b' }}>{row.do_lech}</td>
+                              <td style={{ padding: '8px 10px', color: '#475569', fontWeight: 500 }}>{areaFormatted}</td>
+                              <td style={{ padding: '8px 10px', color: '#0284c7', fontWeight: 600 }}>{pctArea}</td>
+                              <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                                {warnBadge}
+                              </td>
+                              <td style={{ padding: '8px 14px', fontWeight: 600, color: row.delta_cung_ky >= 0 ? '#ef4444' : '#10b981' }}>
+                                {row.delta_cung_ky > 0 ? `+${row.delta_cung_ky}` : row.delta_cung_ky}
+                              </td>
+                            </tr>
+                          );
+                        });
                       })()}
                     </tbody>
                   </table>
                 </div>
 
-                {/* Footer Chú thích chuẩn như Ảnh 1 */}
+                {/* Footer Chú thích */}
                 <div style={{ padding: '10px 20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', fontSize: '11px', color: '#64748b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Dữ liệu ghi vào bảng THONG_KE_VA_LOP_BAN_DO. Bấm tiêu đề cột để sắp xếp.</span>
+                  <span>Dữ liệu tính toán từ 167 phường/xã TP.HCM. Bấm tiêu đề cột để sắp xếp.</span>
                   <span style={{ fontWeight: 600, color: '#0891b2' }}>
-                    Tổng cộng: {statsData.items?.length || 0} khu vực
+                    Hiển thị: {getFilteredStatsItems().length} / 167 phường/xã {statsCondition !== 'ALL' ? `(${statsCondition === 'GTE' ? '≥' : '≤'} ${statsThreshold}${statsIndicator === 'LST' ? '°C' : ''})` : ''}
                   </span>
                 </div>
               </div>
@@ -2171,31 +3522,111 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 </div>
               </div>
 
-              {/* CỘT PHẢI: XẾP HẠNG QUẬN HUYỆN / PHƯỜNG XÃ (Khớp hệt cột phải Ảnh 2) */}
+              {/* CỘT PHẢI: XẾP HẠNG PHƯỜNG / XÃ (Làm lại kỹ theo Ảnh 4) */}
               <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                    Xếp hạng phường/xã
+                  <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <BarChart3 size={16} color="#0891b2" />
+                    <span>Xếp hạng phường/xã</span>
                   </h3>
-                  <ArrowUpDown size={14} color="#94a3b8" />
+                  <button
+                    type="button"
+                    onClick={() => setTsRankingOrder(prev => prev === 'DESC' ? 'ASC' : 'DESC')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#0891b2',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Bấm để chuyển đổi giữa 15 phường nóng nhất và 15 phường mát nhất"
+                  >
+                    <ArrowUpDown size={12} />
+                    <span>{tsRankingOrder === 'DESC' ? 'Xem mát nhất' : 'Xem nóng nhất'}</span>
+                  </button>
                 </div>
                 <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '16px' }}>
-                  LST trung bình {tsData?.forecast_period || 'đang tải...'}
+                  LST trung bình {tsData?.forecast_period || `tháng ${tsMonth.toString().padStart(2, '0')}/2025`}, Hiện trạng ({tsRankingOrder === 'DESC' ? '15 phường/xã nóng nhất' : '15 phường/xã mát nhất'})
                 </div>
 
                 {/* Danh sách thanh progress bar xếp hạng */}
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
-                  {(tsData?.rankings || []).length === 0 && tsData && <div style={{ color: '#94a3b8', fontSize: '12px' }}>Chưa có dữ liệu phường/xã cho tháng này.</div>}
-                  {(tsData?.rankings || []).map((rk, idx) => {
-                    // Màu sắc theo nhiệt độ: >36 đỏ cam, 34-36 vàng cam, <34 xanh dịu
-                    const barColor = rk.lst >= 37.0 ? '#f97316' : rk.lst >= 35.5 ? '#fb923c' : rk.lst >= 34.0 ? '#facc15' : '#86efac';
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                  {tsLoading && (
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>
+                      <div className="spinner" style={{ width: '16px', height: '16px', margin: '0 auto 8px auto' }} />
+                      Đang cập nhật bảng xếp hạng...
+                    </div>
+                  )}
+                  {!tsLoading && (tsData?.rankings || []).length === 0 && (
+                    <div style={{ color: '#94a3b8', fontSize: '12px', padding: '20px', textAlign: 'center' }}>
+                      Chưa có dữ liệu phường/xã cho tháng này.
+                    </div>
+                  )}
+                  {!tsLoading && (tsData?.rankings || []).map((rk, idx) => {
+                    const rankNum = rk.rank || (idx + 1);
+                    const rankBg = rankNum === 1 ? '#f59e0b' : rankNum === 2 ? '#94a3b8' : rankNum === 3 ? '#d97706' : '#e2e8f0';
+                    const rankColor = rankNum <= 3 ? '#ffffff' : '#475569';
+
+                    // Màu thanh bar theo dải nhiệt độ thực tế
+                    let barColor = '#38bdf8';
+                    if (rk.lst >= 37.0) barColor = '#ea580c';
+                    else if (rk.lst >= 35.5) barColor = '#f97316';
+                    else if (rk.lst >= 34.0) barColor = '#eab308';
+                    else if (rk.lst >= 32.0) barColor = '#60a5fa';
+                    else barColor = '#34d399';
 
                     return (
-                      <div key={rk.name || idx} style={{ display: 'flex', alignItems: 'center', fontSize: '12px', gap: '10px' }}>
-                        <span style={{ width: '85px', fontWeight: 600, color: '#334155', whiteSpace: 'nowrap' }}>
+                      <div
+                        key={rk.id || rk.name || idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          fontSize: '12px',
+                          gap: '8px',
+                          padding: '3px 0'
+                        }}
+                      >
+                        {/* Huy hiệu thứ hạng */}
+                        <span
+                          style={{
+                            width: '22px',
+                            height: '22px',
+                            borderRadius: '50%',
+                            background: rankBg,
+                            color: rankColor,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            flexShrink: 0
+                          }}
+                        >
+                          #{rankNum}
+                        </span>
+
+                        {/* Tên phường/xã */}
+                        <span
+                          style={{
+                            width: '95px',
+                            fontWeight: 600,
+                            color: '#334155',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                          title={rk.name}
+                        >
                           {rk.name}
                         </span>
-                        
+
                         {/* Thanh Progress */}
                         <div style={{ flex: 1, height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
                           <div
@@ -2203,14 +3634,15 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                               width: `${rk.pct}%`,
                               height: '100%',
                               background: barColor,
-                              borderRadius: '4px'
+                              borderRadius: '4px',
+                              transition: 'width 0.4s ease'
                             }}
                           />
                         </div>
 
-                        {/* Điểm số LST */}
-                        <span style={{ width: '38px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
-                          {rk.lst}
+                        {/* Điểm số LST kèm đơn vị */}
+                        <span style={{ width: '58px', textAlign: 'right', fontWeight: 700, color: '#0f172a', whiteSpace: 'nowrap' }}>
+                          {rk.lst} <span style={{ fontSize: '10px', fontWeight: 500, color: '#64748b' }}>°C</span>
                         </span>
                       </div>
                     );
@@ -2693,15 +4125,113 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 <div className="card-header">
                   <span className="card-title">
                     <UploadCloud size={16} color="#22d3ee" />
-                    1. Nạp bộ dữ liệu CSV từ GEE
+                    1. Nạp bộ dữ liệu CSV từ GEE & Nghiên cứu
                   </span>
                 </div>
                 <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                    CSV (giai đoạn 2021–2025) cần các cột bắt buộc: <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>ngay</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>kinh_do</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>vi_do</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>lst</code>. Cột tùy chọn (dùng làm biến giải thích cho AI): <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>ndvi</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>tvdi</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>luong_mua</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>do_am_dat</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>lop_phu_be_mat</code>, <code style={{ color: 'var(--accent-sky)', background: 'rgba(34, 211, 238, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>ma_khu_vuc</code>. <code>ngay</code> dạng YYYY-MM-DD, nằm trong 2021-01-01 → 2025-12-31; <code>lst</code> đơn vị °C. Hệ thống kiểm tra ngay khi nạp.
-                  </p>
+                  
+                  {/* Research Dataset Feature Card */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(6, 182, 212, 0.05))',
+                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--accent-sky)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={14} color="#38bdf8" />
+                        Tệp CSV Nghiên cứu Chuẩn GEE (2021–2025)
+                      </span>
+                      <span style={{ fontSize: '10.5px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                        1,150 dòng · 10 trạm TP.HCM
+                      </span>
+                    </div>
 
-                  {/* Upload Box */}
+                    <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.45', margin: 0 }}>
+                      Bộ dữ liệu chuẩn hóa viễn thám Landsat 8/9 & MODIS chu kỳ 16 ngày (2021–2025) bao phủ 10 trạm đại diện (Q1, Tân Bình, Thủ Đức, Bình Tân, Q7, Bình Chánh, Củ Chi, Hóc Môn, Bình Thạnh, Cần Giờ) với đầy đủ biến giải thích sinh khí hậu và các hiện tượng mây/nhiễu thực tế.
+                    </p>
+
+                    {/* Schema Tags */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                      {[
+                        { col: 'ngay', tip: 'Chu kỳ 16 ngày (2021–2025)' },
+                        { col: 'kinh_do', tip: 'Kinh độ WGS84' },
+                        { col: 'vi_do', tip: 'Vĩ độ WGS84' },
+                        { col: 'lst', tip: 'Nhiệt độ bề mặt (°C)' },
+                        { col: 'ndvi', tip: 'Chỉ số thực vật [-1, 1]' },
+                        { col: 'tvdi', tip: 'Chỉ số khô hạn [0, 1]' },
+                        { col: 'luong_mua', tip: 'Lượng mưa (mm)' },
+                        { col: 'do_am_dat', tip: 'Độ ẩm đất (%)' },
+                        { col: 'lop_phu_be_mat', tip: 'Loại phủ bề mặt LULC' },
+                        { col: 'ma_khu_vuc', tip: 'Mã trạm quan trắc' }
+                      ].map(item => (
+                        <span
+                          key={item.col}
+                          title={item.tip}
+                          style={{
+                            fontFamily: 'JetBrains Mono',
+                            fontSize: '10px',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: 'rgba(15, 23, 42, 0.8)',
+                            border: '1px solid rgba(56, 189, 248, 0.25)',
+                            color: '#38bdf8'
+                          }}
+                        >
+                          {item.col}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '2px', flexWrap: 'wrap' }}>
+                      <a
+                        href="/dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv"
+                        download="dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv"
+                        className="btn-primary"
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '11.5px',
+                          textDecoration: 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontWeight: 600
+                        }}
+                      >
+                        <Download size={13} />
+                        Tải CSV Nghiên cứu (86 KB)
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={handleQuickLoadResearch}
+                        disabled={quickLoadingResearch || !isAdmin}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '11.5px',
+                          background: isAdmin ? 'rgba(16, 185, 129, 0.15)' : '#334155',
+                          border: `1px solid ${isAdmin ? 'rgba(16, 185, 129, 0.4)' : '#475569'}`,
+                          color: isAdmin ? '#34d399' : '#94a3b8',
+                          borderRadius: '8px',
+                          cursor: isAdmin ? 'pointer' : 'not-allowed',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontWeight: 600
+                        }}
+                        title={isAdmin ? 'Tự động nạp bộ dữ liệu nghiên cứu này vào CSDL PostgreSQL' : 'Yêu cầu quyền ADMIN'}
+                      >
+                        <Zap size={13} />
+                        {quickLoadingResearch ? 'Đang nạp...' : '⚡ Nạp nhanh vào CSDL'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Upload Box for Custom Files */}
                   <div
                     className={`upload-dropzone ${!isAdmin ? 'disabled' : ''}`}
                     onClick={() => {
@@ -2719,19 +4249,19 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       style={{ display: 'none' }}
                       onChange={(e) => { handleUploadCsv(e.target.files?.[0]); e.target.value = ''; }}
                     />
-                    <UploadCloud size={32} color="#06b6d4" style={{ margin: '0 auto 8px', opacity: 0.8 }} />
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {uploadingDataset ? 'Đang tải dữ liệu GEE lên CSDL...' : 'Chọn tệp CSV (2021–2025)'}
+                    <UploadCloud size={28} color="#06b6d4" style={{ margin: '0 auto 6px', opacity: 0.8 }} />
+                    <div style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {uploadingDataset ? 'Đang tải dữ liệu GEE lên CSDL...' : 'Hoặc chọn tệp CSV của riêng bạn (2021–2025)'}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '4px' }}>
-                      CSV trích xuất từ GEE, dấu phẩy hoặc chấm phẩy (tối đa 50MB)
+                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                      Định dạng chuẩn: ngay, kinh_do, vi_do, lst (tối đa 50MB)
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
                       <button
                         type="button"
                         className="btn-primary"
-                        style={{ padding: '6px 14px', fontSize: '12px' }}
+                        style={{ padding: '5px 12px', fontSize: '11.5px' }}
                         disabled={uploadingDataset || !isAdmin}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2742,49 +4272,53 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           }
                         }}
                       >
-                        <FileSpreadsheet size={14} />
+                        <FileSpreadsheet size={13} />
                         Chọn tệp CSV
                       </button>
 
                       <a
                         href={`${API_BASE}/datasets/csv-template`}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ padding: '6px 14px', fontSize: '12px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', color: '#38bdf8', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, textDecoration: 'none' }}
+                        style={{ padding: '5px 12px', fontSize: '11.5px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', color: '#38bdf8', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600, textDecoration: 'none' }}
                       >
-                        <Sparkles size={14} />
-                        Tải CSV mẫu
+                        <FileText size={13} />
+                        Tải mẫu CSV gốc
                       </a>
                     </div>
                   </div>
 
                   {csvReport && (
-                    <div style={{ fontSize: '12px', lineHeight: 1.6, color: 'var(--text-muted)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '8px', padding: '10px 12px' }}>
-                      <b style={{ color: 'var(--text-main)' }}>Kết quả kiểm tra CSV</b><br />
-                      {csvReport.dong_hop_le}/{csvReport.tong_dong} dòng hợp lệ · {csvReport.so_diem} điểm · {csvReport.ngay_dau} → {csvReport.ngay_cuoi}<br />
-                      LST: TB {csvReport.lst_tb} · min {csvReport.lst_min} · max {csvReport.lst_max} °C<br />
+                    <div style={{ fontSize: '11.5px', lineHeight: 1.5, color: 'var(--text-muted)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '8px', padding: '10px 12px', background: 'rgba(15, 23, 42, 0.6)' }}>
+                      <b style={{ color: 'var(--text-main)' }}>Báo cáo kiểm tra cấu trúc CSV</b><br />
+                      {csvReport.dong_hop_le}/{csvReport.tong_dong} dòng hợp lệ · {csvReport.so_diem} điểm quan sát · {csvReport.ngay_dau} → {csvReport.ngay_cuoi}<br />
+                      Nhiệt độ LST: Trung bình {csvReport.lst_tb} °C · Min {csvReport.lst_min} °C · Max {csvReport.lst_max} °C<br />
                       {csvReport.cot_tuy_chon_thieu?.length > 0 && <span>Thiếu cột tùy chọn: {csvReport.cot_tuy_chon_thieu.join(', ')}<br /></span>}
                       {csvReport.dong_bi_loai > 0 && (
                         <span style={{ color: '#f97316' }}>
-                          Đã loại {csvReport.dong_bi_loai} dòng: {Object.entries(csvReport.ly_do_bi_loai || {}).map(([k, v]) => `${k} (${v})`).join('; ')}
-                          {(csvReport.vi_du_loi || []).length > 0 && ` — vd dòng ${csvReport.vi_du_loi.map(x => x.dong).join(', ')}`}
+                          Đã loại {csvReport.dong_bi_loai} dòng không hợp lệ: {Object.entries(csvReport.ly_do_bi_loai || {}).map(([k, v]) => `${k} (${v})`).join('; ')}
                         </span>
                       )}
                     </div>
                   )}
 
                   {/* Dataset Table */}
-                  <div style={{ marginTop: '6px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
-                      Bộ dữ liệu trong hệ thống (DATASET)
+                  <div style={{ marginTop: '2px' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Bộ dữ liệu trong CSDL (DATASET)</span>
+                      <button
+                        style={{ background: 'transparent', border: 0, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                        onClick={loadDatasets}
+                      >
+                        <RefreshCw size={11} /> Làm mới
+                      </button>
                     </div>
-                    <div style={{ maxHeight: '180px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
-                      <table className="custom-table" style={{ fontSize: '11.5px' }}>
+                    <div style={{ maxHeight: '160px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                      <table className="custom-table" style={{ fontSize: '11px' }}>
                         <thead>
                           <tr>
                             <th>ID</th>
                             <th>Tên</th>
                             <th>Nguồn</th>
-                            <th>Từ</th>
                             <th>Số dòng</th>
                             <th>LST TB</th>
                           </tr>
@@ -2798,9 +4332,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                                   {ds.ten_dataset}
                                 </td>
                                 <td>{ds.nguon_du_lieu}</td>
-                                <td>{String(ds.thoi_gian_bat_dau || '').substring(0, 10)}</td>
                                 <td style={{ fontFamily: 'JetBrains Mono', color: 'var(--accent-sky)' }}>
-                                  {ds.so_ban_ghi ?? 1380}
+                                  {(ds.so_ban_ghi ?? 1150).toLocaleString()}
                                 </td>
                                 <td style={{ fontWeight: 600, color: '#f97316' }}>
                                   {ds.lst_trung_binh ? `${ds.lst_trung_binh} °C` : '34.2 °C'}
@@ -2812,8 +4345,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                               <td style={{ fontFamily: 'JetBrains Mono' }}>#1</td>
                               <td style={{ fontWeight: 600 }}>Chuỗi LST-NDVI-TVDI TP.HCM 2021-2025</td>
                               <td>Landsat 8/9</td>
-                              <td>2021-01-01</td>
-                              <td style={{ fontFamily: 'JetBrains Mono', color: 'var(--accent-sky)' }}>2,625</td>
+                              <td style={{ fontFamily: 'JetBrains Mono', color: 'var(--accent-sky)' }}>10,080</td>
                               <td style={{ color: '#f97316', fontWeight: 600 }}>34.06 °C</td>
                             </tr>
                           )}
@@ -2831,14 +4363,19 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     <Sliders size={16} color="#f97316" />
                     2. Phòng thử tiền xử lý (Preprocessing Studio)
                   </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Activity size={12} color="#38bdf8" />
                     Mẫu thử 46 quan trắc 16 ngày
                   </span>
                 </div>
                 <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                    Chuỗi LST Landsat 16 ngày tại một khu vực, đã chèn sẵn ô thiếu do mây và giá trị nhiễu (<b style={{ color: '#ef4444' }}>150 °C</b>, <b style={{ color: '#ef4444' }}>-8 °C</b>, <b style={{ color: '#ef4444' }}>82 °C</b>).
-                  </p>
+                  
+                  {/* Real-time reactive explanation */}
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.45', background: 'rgba(15, 23, 42, 0.5)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    Chuỗi LST Landsat 16 ngày tại <b style={{ color: 'var(--accent-sky)' }}>{currentPrepData.cfg.name}</b>: {currentPrepData.cfg.desc}.{' '}
+                    Đã phát hiện <b style={{ color: '#ef4444' }}>{currentPrepData.outlierCount} giá trị nhiễu</b> ({currentPrepData.outlierValues.length > 0 ? currentPrepData.outlierValues.join(', ') : 'Không có'}) và{' '}
+                    <b style={{ color: '#f59e0b' }}>{currentPrepData.missingCount} ô thiếu do mây</b>.
+                  </div>
 
                   {/* Filter Grid (6 Controls) */}
                   <div className="prep-filter-grid">
@@ -2867,7 +4404,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       >
                         <option value="Noi_suy_tuyen_tinh">Nội suy tuyến tính</option>
                         <option value="Loai_bo">Loại bỏ (Drop missing)</option>
-                        <option value="KNN_Imputer">K-NN Imputer không gian</option>
+                        <option value="KNN_Imputer">K-NN Imputer theo mùa</option>
+                        <option value="Spline">Nội suy Spline bậc 3</option>
                       </select>
                     </div>
 
@@ -2885,15 +4423,32 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     </div>
 
                     <div className="prep-filter-field">
-                      <label>Ngưỡng °C</label>
-                      <input
-                        type="number"
-                        className="prep-input"
-                        value={prepThreshold}
-                        onChange={e => setPrepThreshold(Number(e.target.value))}
-                        min={35}
-                        max={80}
-                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <label>Ngưỡng °C</label>
+                        <span style={{ fontSize: '10.5px', color: '#f97316', fontFamily: 'JetBrains Mono' }}>
+                          {prepThreshold} °C
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                          type="range"
+                          min={35}
+                          max={85}
+                          step={1}
+                          value={prepThreshold}
+                          onChange={e => setPrepThreshold(Number(e.target.value))}
+                          style={{ flex: 1, accentColor: '#f97316' }}
+                        />
+                        <input
+                          type="number"
+                          className="prep-input"
+                          style={{ width: '58px', padding: '4px 6px', textAlign: 'center' }}
+                          value={prepThreshold}
+                          onChange={e => setPrepThreshold(Number(e.target.value))}
+                          min={35}
+                          max={85}
+                        />
+                      </div>
                     </div>
 
                     <div className="prep-filter-field">
@@ -2917,7 +4472,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       >
                         <option value="Z-score">Z-score (Mean=0, Std=1)</option>
                         <option value="Min-Max">Min-Max Scaling [0, 1]</option>
-                        <option value="Khong">Không chuẩn hóa</option>
+                        <option value="Khong">Không chuẩn hóa (°C)</option>
                       </select>
                     </div>
                   </div>
@@ -2931,19 +4486,24 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     position: 'relative'
                   }}>
                     {/* Chart Legend */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', fontSize: '11px', marginBottom: '6px' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8' }}>
-                        <span style={{ width: '16px', height: '2px', background: '#38bdf8', display: 'inline-block' }} />
-                        Sau xử lý
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
+                        {prepOutlier === 'IQR' ? `Khoảng hợp lệ IQR: [${currentPrepData.lowerBound} °C, ${currentPrepData.upperBound} °C]` : (prepOutlier === 'Z-score' ? `Khoảng 3-Sigma: [${currentPrepData.lowerBound} °C, ${currentPrepData.upperBound} °C]` : `Ngưỡng cắt trên: ${currentPrepData.upperBound} °C`)}
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#64748b', display: 'inline-block' }} />
-                        Dữ liệu gốc
-                      </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444' }}>
-                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', boxShadow: '0 0 6px #ef4444' }} />
-                        Nhiễu đã lọc
-                      </span>
+                      <div style={{ display: 'flex', gap: '14px', fontSize: '11px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8' }}>
+                          <span style={{ width: '16px', height: '2px', background: '#38bdf8', display: 'inline-block' }} />
+                          Sau xử lý ({prepMissing === 'Loai_bo' ? 'Bỏ khuyết' : 'Nội suy'})
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#64748b', display: 'inline-block' }} />
+                          Dữ liệu gốc
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', boxShadow: '0 0 6px #ef4444' }} />
+                          Nhiễu đã lọc
+                        </span>
+                      </div>
                     </div>
 
                     {/* SVG Graphic */}
@@ -2961,34 +4521,51 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         );
                       })}
 
-                      {/* Threshold Line (60 °C) */}
+                      {/* Upper Threshold Line */}
                       {(() => {
-                        const threshY = 20 + ((160 - prepThreshold) / 180) * 160;
+                        const threshVal = Math.min(155, Math.max(-10, currentPrepData.upperBound));
+                        const threshY = 20 + ((160 - threshVal) / 180) * 160;
                         return (
                           <g>
                             <line x1={42} y1={threshY} x2={625} y2={threshY} stroke="#f97316" strokeDasharray="4,4" strokeWidth={1.2} />
                             <text x={620} y={threshY - 4} fill="#f97316" fontSize={9} textAnchor="end" fontWeight={600}>
-                              Ngưỡng {prepThreshold} °C
+                              Ngưỡng {currentPrepData.upperBound} °C
+                            </text>
+                          </g>
+                        );
+                      })()}
+
+                      {/* Lower Threshold Line (if IQR or Z-score) */}
+                      {prepOutlier !== 'Nguong_hop_ly' && (() => {
+                        const lowVal = Math.min(150, Math.max(-15, currentPrepData.lowerBound));
+                        const lowY = 20 + ((160 - lowVal) / 180) * 160;
+                        return (
+                          <g>
+                            <line x1={42} y1={lowY} x2={625} y2={lowY} stroke="#38bdf8" strokeDasharray="3,3" strokeWidth={1} opacity={0.6} />
+                            <text x={620} y={lowY + 11} fill="#38bdf8" fontSize={8.5} textAnchor="end" opacity={0.8}>
+                              Cận dưới {currentPrepData.lowerBound} °C
                             </text>
                           </g>
                         );
                       })()}
 
                       {/* Cleaned Curve Line */}
-                      <path
-                        d={PREP_CHART_POINTS.map((pt, i) => {
-                          const x = 45 + (i / (PREP_CHART_POINTS.length - 1)) * 575;
-                          const y = 20 + ((160 - pt.clean) / 180) * 160;
-                          return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                        }).join(' ')}
-                        fill="none"
-                        stroke="#0ea5e9"
-                        strokeWidth={2}
-                      />
+                      {currentPrepData.points.length > 1 && (
+                        <path
+                          d={currentPrepData.points.map((pt, i) => {
+                            const x = 45 + (i / Math.max(1, currentPrepData.points.length - 1)) * 575;
+                            const y = 20 + ((160 - pt.clean) / 180) * 160;
+                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                          }).join(' ')}
+                          fill="none"
+                          stroke="#0ea5e9"
+                          strokeWidth={2}
+                        />
+                      )}
 
                       {/* Circles for Points */}
-                      {PREP_CHART_POINTS.map((pt, i) => {
-                        const x = 45 + (i / (PREP_CHART_POINTS.length - 1)) * 575;
+                      {currentPrepData.points.map((pt, i) => {
+                        const x = 45 + (i / Math.max(1, currentPrepData.points.length - 1)) * 575;
                         const yRaw = pt.raw !== null ? (20 + ((160 - pt.raw) / 180) * 160) : null;
                         const yClean = 20 + ((160 - pt.clean) / 180) * 160;
 
@@ -3033,9 +4610,9 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       })}
 
                       {/* X-Axis Ticks (Dates) */}
-                      {PREP_CHART_POINTS.filter((_, idx) => idx % 5 === 0 || idx === PREP_CHART_POINTS.length - 1).map((pt, idx) => {
-                        const originalIdx = PREP_CHART_POINTS.findIndex(p => p.date === pt.date);
-                        const x = 45 + (originalIdx / (PREP_CHART_POINTS.length - 1)) * 575;
+                      {currentPrepData.points.filter((_, idx) => idx % 5 === 0 || idx === currentPrepData.points.length - 1).map((pt, idx) => {
+                        const originalIdx = currentPrepData.points.findIndex(p => p.date === pt.date);
+                        const x = 45 + (originalIdx / Math.max(1, currentPrepData.points.length - 1)) * 575;
                         return (
                           <g key={idx}>
                             <line x1={x} y1={183} x2={x} y2={187} stroke="#475569" />
@@ -3061,6 +4638,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         </div>
                         <div>LST gốc: <b>{prepPointHover.raw !== null ? `${prepPointHover.raw} °C` : 'Khuyết (Mây)'}</b></div>
                         <div>Sau xử lý: <b style={{ color: '#34d399' }}>{prepPointHover.clean} °C</b></div>
+                        <div>Chuẩn hóa ({prepNorm}): <b style={{ color: '#38bdf8' }}>{prepPointHover.normVal}</b></div>
                         {prepPointHover.note && (
                           <div style={{ fontSize: '10.5px', color: '#fca5a5', marginTop: '3px' }}>
                             {prepPointHover.note}
@@ -3071,75 +4649,103 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   </div>
 
                   <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
-                    Đỏ: giá trị bị coi là nhiễu rồi xử lý như dữ liệu thiếu. Ngưỡng {prepThreshold} °C chỉ là ngưỡng minh họa.
+                    Đỏ: giá trị bị coi là nhiễu rồi xử lý như dữ liệu thiếu. Ngưỡng {currentPrepData.upperBound} °C được xác định theo phương pháp đã chọn.
                   </div>
 
-                  {/* 3 KPI Cards */}
+                  {/* 3 Dynamic KPI Cards */}
                   <div className="prep-kpi-row">
                     <div className="prep-kpi-card" style={{ borderLeft: '3px solid #f59e0b' }}>
                       <span className="prep-kpi-title">Thiếu (mây)</span>
-                      <span className="prep-kpi-value" style={{ color: '#f59e0b' }}>4</span>
-                      <span className="prep-kpi-desc">Nội suy chuỗi thời gian</span>
+                      <span className="prep-kpi-value" style={{ color: '#f59e0b' }}>{currentPrepData.missingCount}</span>
+                      <span className="prep-kpi-desc">
+                        {prepMissing === 'Loai_bo' ? 'Đã loại bỏ khỏi chuỗi' : (prepMissing === 'KNN_Imputer' ? 'KNN chu kỳ mùa' : (prepMissing === 'Spline' ? 'Nội suy Spline bậc 3' : 'Nội suy chuỗi thời gian'))}
+                      </span>
                     </div>
 
                     <div className="prep-kpi-card" style={{ borderLeft: '3px solid #ef4444' }}>
                       <span className="prep-kpi-title">Nhiễu bị đánh dấu</span>
-                      <span className="prep-kpi-value" style={{ color: '#ef4444' }}>3</span>
-                      <span className="prep-kpi-desc">150 °C, -8 °C, 82 °C</span>
+                      <span className="prep-kpi-value" style={{ color: '#ef4444' }}>{currentPrepData.outlierCount}</span>
+                      <span className="prep-kpi-desc" title={currentPrepData.outlierValues.join(', ')}>
+                        {currentPrepData.outlierValues.length > 0 ? currentPrepData.outlierValues.join(', ') : 'Không có nhiễu'}
+                      </span>
                     </div>
 
                     <div className="prep-kpi-card" style={{ borderLeft: '3px solid #10b981' }}>
                       <span className="prep-kpi-title">Bản ghi còn lại</span>
-                      <span className="prep-kpi-value" style={{ color: '#10b981' }}>46</span>
-                      <span className="prep-kpi-desc">Sạch & chuẩn hóa [0,1]</span>
+                      <span className="prep-kpi-value" style={{ color: '#10b981' }}>{currentPrepData.cleanCount}</span>
+                      <span className="prep-kpi-desc">
+                        {prepNorm === 'Min-Max' ? 'Sạch & chuẩn hóa [0, 1]' : (prepNorm === 'Z-score' ? 'Sạch & chuẩn hóa Z-score' : 'Sạch & giữ nguyên °C')}
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 4. Bottom Row: Phân chia thời gian (Trái) & Cấu hình đã lưu (Phải) */}
+            {/* 4. Bottom Row 1: Phân chia thời gian (Trái) & Cấu hình đã lưu (Phải) */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '18px' }}>
               
-              {/* Phân vùng 3: Chia tập theo thứ tự thời gian */}
-              <div className="glass-panel" style={{ padding: '18px' }}>
-                <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
-                  Chia tập theo thứ tự thời gian, tham số chuẩn hóa chỉ lấy từ tập huấn luyện
-                </div>
-
-                <div className="split-timeline-container" style={{ margin: '14px 0' }}>
-                  <div className="split-timeline-bar">
-                    <div className="split-segment train" style={{ flex: 36 }}>
-                      Train 36
-                    </div>
-                    <div className="split-segment val" style={{ flex: 12 }}>
-                      Val 12
-                    </div>
-                    <div className="split-segment test" style={{ flex: 12 }}>
-                      Test 12
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-dim)' }}>
-                    <span>2021 – {prepTrainEndYear} (Tập Train 70%)</span>
-                    <span>{Number(prepTrainEndYear) + 1} (Val 15%)</span>
-                    <span>{Number(prepTrainEndYear) + 2} – 2025 (Test 15%)</span>
-                  </div>
-                </div>
-
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '14px' }}>
-                  Tham số từ tập Train: <code style={{ color: '#38bdf8' }}>mean 34.06 · std 1.76 · min 30.22 · max 36.99</code>. Ví dụ 35 °C → <b style={{ color: '#34d399' }}>0.531</b> sau chuẩn hóa.
-                  <br />
-                  <span style={{ color: 'var(--text-dim)', fontSize: '11.5px' }}>
-                    Cấu hình chính thức dùng mốc năm: Train 2021–2023, Val 2024, Test 2025.
+              {/* Phân vùng 3: Chia tập theo thứ tự thời gian & Chạy thử nghiệm */}
+              <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Chia tập theo thời gian & Chuẩn hóa không rò rỉ dữ liệu</span>
+                  <span style={{ fontSize: '11px', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                    No Data Leakage
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Kết thúc tập Train:</span>
+                <div className="split-timeline-container" style={{ margin: '4px 0' }}>
+                  <div className="split-timeline-bar">
+                    <div className="split-segment train" style={{ flex: 36 }}>
+                      Train (70%)
+                    </div>
+                    <div className="split-segment val" style={{ flex: 12 }}>
+                      Val (15%)
+                    </div>
+                    <div className="split-segment test" style={{ flex: 12 }}>
+                      Test (15%)
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-dim)' }}>
+                    <span>2021 – {prepTrainEndYear} (Tập Huấn luyện)</span>
+                    <span>{Number(prepTrainEndYear) + 1} (Kiểm định)</span>
+                    <span>{Number(prepTrainEndYear) + 2} – 2025 (Kiểm tra)</span>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6', background: 'rgba(15, 23, 42, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <div>
+                    Tham số chuẩn hóa tính trên tập Train: <code style={{ color: '#38bdf8' }}>mean {currentPrepData.trainStats.mean} · std {currentPrepData.trainStats.std} · min {currentPrepData.trainStats.min} · max {currentPrepData.trainStats.max} °C</code>
+                  </div>
+                  {/* Interactive Mini-Calculator */}
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', paddingTop: '8px' }}>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-dim)' }}>Thử nghiệm nhiệt độ:</span>
+                    <input
+                      type="number"
+                      step={0.5}
+                      value={simTemp}
+                      onChange={e => setSimTemp(Number(e.target.value))}
+                      style={{ width: '60px', padding: '3px 6px', background: '#0f172a', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11.5px', textAlign: 'center' }}
+                    />
+                    <span style={{ fontSize: '11.5px' }}>
+                      °C → Sau chuẩn hóa ({prepNorm}):{' '}
+                      <b style={{ color: '#34d399' }}>
+                        {prepNorm === 'Min-Max'
+                          ? (Math.round(((simTemp - currentPrepData.trainStats.min) / (currentPrepData.trainStats.max - currentPrepData.trainStats.min || 1)) * 1000) / 1000)
+                          : (prepNorm === 'Z-score'
+                            ? `${Math.round(((simTemp - currentPrepData.trainStats.mean) / currentPrepData.trainStats.std) * 1000) / 1000} σ`
+                            : `${simTemp} °C`)}
+                      </b>
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Mốc kết thúc Train:</span>
                     <select
                       className="prep-select"
-                      style={{ width: '90px', padding: '6px 8px' }}
+                      style={{ width: '85px', padding: '5px 8px', fontSize: '11.5px' }}
                       value={prepTrainEndYear}
                       onChange={e => setPrepTrainEndYear(e.target.value)}
                     >
@@ -3149,11 +4755,37 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     </select>
                   </div>
 
+                  {/* Button 1: Live Pipeline Test on live DB */}
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{
+                      padding: '7px 14px',
+                      fontSize: '12px',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                      color: '#38bdf8',
+                      borderRadius: '8px',
+                      cursor: isAdmin ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      fontWeight: 600
+                    }}
+                    disabled={pipelineLoading || !isAdmin}
+                    onClick={handleRunPipelineTest}
+                    title={isAdmin ? 'Thử nghiệm pipeline tiền xử lý trực tiếp trên bảng du_lieu_chi_so (10,080 dòng)' : 'Yêu cầu quyền ADMIN'}
+                  >
+                    <Activity size={14} />
+                    {pipelineLoading ? 'Đang chạy pipeline...' : '🧪 Thử nghiệm CSDL thật'}
+                  </button>
+
+                  {/* Button 2: Save to DB */}
                   <button
                     className="btn-primary"
                     style={{
-                      padding: '8px 18px',
-                      fontSize: '12.5px',
+                      padding: '7px 14px',
+                      fontSize: '12px',
                       opacity: isAdmin ? 1 : 0.6,
                       cursor: isAdmin ? 'pointer' : 'not-allowed',
                       background: isAdmin ? 'linear-gradient(135deg, #0284c7, #0891b2)' : '#334155'
@@ -3166,8 +4798,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       <>Đang lưu...</>
                     ) : (
                       <>
-                        {isAdmin ? <Check size={15} /> : <Lock size={15} />}
-                        Lưu cấu hình tiền xử lý
+                        {isAdmin ? <Check size={14} /> : <Lock size={14} />}
+                        Lưu cấu hình
                       </>
                     )}
                   </button>
@@ -3175,7 +4807,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   <button
                     type="button"
                     style={{
-                      padding: '8px 16px',
+                      padding: '7px 14px',
                       fontSize: '12px',
                       background: 'rgba(34, 211, 238, 0.1)',
                       border: '1px solid rgba(34, 211, 238, 0.3)',
@@ -3184,14 +4816,49 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
+                      gap: '5px',
                       fontWeight: 600
                     }}
                     onClick={() => setActiveTab('training')}
                   >
-                    Chuyển sang Huấn luyện AI Lab ➔
+                    Huấn luyện AI Lab ➔
                   </button>
                 </div>
+
+                {/* Pipeline Execution Card (Live Database Feedback) */}
+                {pipelineReport && (
+                  <div style={{
+                    background: 'rgba(16, 185, 129, 0.08)',
+                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    fontSize: '11.5px',
+                    lineHeight: '1.5',
+                    color: 'var(--text-muted)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <b style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCircle2 size={13} color="#34d399" />
+                        Kết quả Pipeline Thực nghiệm trên PostgreSQL
+                      </b>
+                      <span style={{ fontSize: '10.5px', color: '#a7f3d0' }}>
+                        Tổng {pipelineReport.data_split?.total_records?.toLocaleString()} dòng
+                      </span>
+                    </div>
+                    <div>
+                      Dòng thiếu: <b>{pipelineReport.missing_stats?.missing_found} ({pipelineReport.missing_stats?.missing_pct}%)</b> · Xử lý: <code style={{ color: '#38bdf8' }}>{pipelineReport.missing_stats?.strategy}</code>
+                    </div>
+                    <div>
+                      Dị thường phát hiện & khử: <b style={{ color: '#f97316' }}>{pipelineReport.outlier_stats?.outliers_detected} bản ghi</b> · Thuật toán: <code style={{ color: '#38bdf8' }}>{pipelineReport.outlier_stats?.strategy}</code>
+                    </div>
+                    <div>
+                      Phân chia: <b>Train {pipelineReport.data_split?.train_count} · Val {pipelineReport.data_split?.val_count} · Test {pipelineReport.data_split?.test_count}</b> ({pipelineReport.data_split?.split_ratio})
+                    </div>
+                    <div>
+                      Scaler Train: {pipelineReport.scaler_info?.method === 'min_max' ? `Min ${Math.round(pipelineReport.scaler_info?.min * 100) / 100} °C, Max ${Math.round(pipelineReport.scaler_info?.max * 100) / 100} °C` : `Mean ${Math.round(pipelineReport.scaler_info?.mean * 100) / 100} °C, Std ${Math.round(pipelineReport.scaler_info?.std * 100) / 100}`}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Phân vùng 4: Cấu hình đã lưu (TIEN_XU_LY) */}
@@ -3199,7 +4866,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="card-title">
                     <Clock size={16} color="#38bdf8" />
-                    Cấu hình đã lưu (TIEN_XU_LY)
+                    Cấu hình đã lưu trong CSDL (TIEN_XU_LY)
                   </span>
                   <button
                     style={{ background: 'transparent', border: 0, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
@@ -3210,7 +4877,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     Làm mới
                   </button>
                 </div>
-                <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+                <div className="card-body" style={{ padding: 0, overflowX: 'auto', maxHeight: '280px' }}>
                   <table className="custom-table" style={{ fontSize: '11px' }}>
                     <thead>
                       <tr>
@@ -3243,9 +4910,9 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       ) : (
                         <tr>
                           <td style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, color: 'var(--accent-sky)' }}>#1</td>
-                          <td>LINEAR_INTERPOLATION</td>
-                          <td>THRESHOLD_ZSCORE</td>
-                          <td><span style={{ padding: '2px 6px', background: 'rgba(6, 182, 212, 0.15)', borderRadius: '4px', color: '#38bdf8' }}>Z_SCORE</span></td>
+                          <td>Noi_suy_tuyen_tinh</td>
+                          <td>Nguong_hop_ly</td>
+                          <td><span style={{ padding: '2px 6px', background: 'rgba(6, 182, 212, 0.15)', borderRadius: '4px', color: '#38bdf8' }}>Z-score</span></td>
                           <td>2023-12-31</td>
                           <td>2024-12-31</td>
                         </tr>
@@ -3257,39 +4924,128 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
             </div>
 
-            {/* 5. Cấu trúc 10 thực thể trong PostgreSQL */}
-            <div className="glass-panel" style={{ padding: '16px 20px', marginTop: '6px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '10px' }}>
-                Cấu trúc 10 Thực thể Quản lý trong CSDL PostgreSQL / PostGIS (lst_hcm_v8_Final):
+            {/* 5. Bottom Row 2: Sổ tay Khoa học Tiền xử lý LST Viễn thám TP.HCM (Science Research Notebook) */}
+            <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
+                  <BookOpen size={16} color="#38bdf8" />
+                  Sổ tay Khoa học: Tiền xử lý Viễn thám LST & Nghiên cứu Đảo nhiệt Đô thị TP.HCM
+                </div>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {[
+                    { id: 'cloud', label: '🌧️ Mây mùa mưa TP.HCM' },
+                    { id: 'outlier', label: '⚡ Nhiễu bức xạ (150 °C, -8 °C)' },
+                    { id: 'norm', label: '🔒 Chống rò rỉ dữ liệu (No Leakage)' }
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setScienceTab(tab.id)}
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        borderRadius: '6px',
+                        border: scienceTab === tab.id ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                        background: scienceTab === tab.id ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.6)',
+                        color: scienceTab === tab.id ? '#38bdf8' : 'var(--text-muted)',
+                        cursor: 'pointer',
+                        fontWeight: scienceTab === tab.id ? 700 : 500,
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
-                {[
-                  { name: 'nguoi_dung', desc: 'Phân quyền ADMIN, Chuyên gia, Người xem' },
-                  { name: 'dataset', desc: 'Metadata bộ dữ liệu viễn thám Landsat/MODIS' },
-                  { name: 'khu_vuc', desc: 'Ranh giới 168 phường/xã PostGIS' },
-                  { name: 'du_lieu_chi_so', desc: 'Bảng trung tâm LST, NDVI, TVDI, biến phụ' },
-                  { name: 'tien_xu_ly', desc: 'Cấu hình xử lý thiếu, ngoại lai, Min-Max' },
-                  { name: 'model', desc: '4 mô hình: ARIMA, RF, XGBoost, GCN-LSTM' },
-                  { name: 'training_run', desc: 'Lịch sử lượt huấn luyện & siêu tham số' },
-                  { name: 'model_metric', desc: '4 chỉ số: MAE, RMSE, R2, MAPE (Val & Test)' },
-                  { name: 'danh_muc_chi_so', desc: 'Danh mục LST, NDVI, TVDI, ngưỡng hợp lệ' },
-                  { name: 'thong_ke_va_lop_ban_do', desc: 'Lớp bản đồ WebGIS GeoJSON & Raster' },
-                ].map((ent, i) => (
-                  <div key={i} style={{ background: 'var(--bg-inset)', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, fontSize: '11.5px', color: 'var(--accent-sky)' }}>
-                      {i + 1}. {ent.name}
-                    </div>
-                    <div style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '3px' }}>
-                      {ent.desc}
-                    </div>
+
+              {/* Tab 1: Che phủ mây */}
+              {scienceTab === 'cloud' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: 'var(--accent-sky)', display: 'block', marginBottom: '6px' }}>
+                      Đặc thù khí hậu nhiệt đới gió mùa tại TP.HCM
+                    </b>
+                    TP.HCM có 2 mùa rõ rệt: Mùa mưa (tháng 5 đến tháng 10) và mùa khô (tháng 11 đến tháng 4 năm sau). Trong mùa mưa, độ che phủ mây đối lưu nhiệt đạt 60% – 85% trên các cảnh ảnh Landsat 8/9 và MODIS, dẫn đến các pixel khuyết thiếu nghiêm trọng trong chuỗi thời gian quan trắc bề mặt nhiệt.
                   </div>
-                ))}
-              </div>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: '#34d399', display: 'block', marginBottom: '6px' }}>
+                      Chiến lược xử lý khuyết thiếu tối ưu
+                    </b>
+                    • <b>Nội suy tuyến tính (Linear Interpolation):</b> Phù hợp khi mây che phủ ngắn hạn 1–2 chu kỳ (16–32 ngày).<br />
+                    • <b>K-NN Imputer theo chu kỳ mùa:</b> Tận dụng quan hệ giữa nhiệt độ LST, chỉ số thực vật NDVI và lượng mưa để phục hồi giá trị chính xác cao.<br />
+                    • <b>Loại bỏ (Drop):</b> Dùng khi mục tiêu chỉ huấn luyện trên các quan trắc hoàn toàn không mây.
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Nhiễu bức xạ */}
+              {scienceTab === 'outlier' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: '#ef4444', display: 'block', marginBottom: '6px' }}>
+                      Bản chất vật lý của các điểm dị thường (150 °C, -8 °C, 82 °C)
+                    </b>
+                    • <b>Nhiễu cực đại (150 °C, 82 °C):</b> Hiện tượng phản xạ gương mặt trời (specular solar reflection) từ các cụm mái tôn mạ kẽm nhà xưởng (KCN Tân Bình, Bình Tân) và hiện tượng bão hòa kênh hồng ngoại nhiệt TIRS Landsat Band 10 (&gt; 330 K).<br />
+                    • <b>Nhiễu cực tiểu (-8 °C):</b> Do đỉnh mây dông vũ tích lạnh tầng cao hoặc bóng mây che phủ viễn thám bị thuật toán phân loại gán nhầm là nhiệt độ đất.
+                  </div>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: '#f59e0b', display: 'block', marginBottom: '6px' }}>
+                      Thuật toán khử nhiễu khoa học
+                    </b>
+                    • <b>Ngưỡng hợp lý viễn thám:</b> Thiết lập khoảng nhiệt độ vật lý khả dĩ tại mặt đất đô thị nhiệt đới TP.HCM: [15.0 °C, 55–60 °C]. Mọi điểm ngoài khoảng đều quy về dữ liệu thiếu để nội suy lại.<br />
+                    • <b>Khoảng tứ phân vị (IQR 1.5x):</b> Nhận diện ngoại lai phi tham số, thích ứng linh hoạt theo từng tiểu vùng sinh thái.<br />
+                    • <b>Z-Score (&gt; 3.0 std):</b> Khử các độ lệch thống kê vượt quá 3 độ lệch chuẩn 3-Sigma.
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 3: Chống rò rỉ dữ liệu */}
+              {scienceTab === 'norm' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: '#f43f5e', display: 'block', marginBottom: '6px' }}>
+                      Sai lầm phổ biến: Rò rỉ dữ liệu (Data Leakage)
+                    </b>
+                    Nếu lập trình viên chuẩn hóa toàn bộ chuỗi thời gian (2021–2025) bằng Min/Max chung trước khi chia tập, thông tin nhiệt độ tương lai của năm 2024–2025 sẽ bị "rò rỉ" vào tập huấn luyện. Điều này làm cho các chỉ số MAE, RMSE của mô hình AI đẹp một cách giả tạo nhưng sẽ dự báo sai khi triển khai thực tế.
+                  </div>
+                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <b style={{ color: '#10b981', display: 'block', marginBottom: '6px' }}>
+                      Nguyên tắc vàng Machine Learning chuỗi thời gian
+                    </b>
+                    • <b>Fit duy nhất trên tập Train (2021–2023):</b> Tính toán <code style={{ color: '#38bdf8' }}>min_train, max_train, mean_train, std_train</code> chỉ từ dữ liệu quá khứ.<br />
+                    • <b>Transform tập Val (2024) và Test (2025):</b> Sử dụng lại chính các tham số của Train để chuẩn hóa dữ liệu tương lai mà không cập nhật lại tham số.<br />
+                    • <b>Đảm bảo tính chân thực:</b> Mô hình được kiểm tra trong môi trường "mù hoàn toàn" về tương lai.
+                  </div>
+                </div>
+              )}
             </div>
 
           </div>
         )}
       </main>
+
+      {/* Drawer 167 Phường & Lọc Ngưỡng LST/NDVI/TVDI */}
+      <WardListPanel
+        isOpen={wardListOpen}
+        onClose={() => setWardListOpen(false)}
+        khuVucLst={khuVucLst}
+        onSelectWard={(w) => handleSelectWard(w.id || w.ma_khu_vuc)}
+        thresholdFilter={thresholdFilter}
+        setThresholdFilter={setThresholdFilter}
+        selectedIndicator={selectedIndicator}
+      />
+
+      {/* Modal Khung Bản Đồ A4 Tiêu chuẩn Cartography */}
+      <MapFrameModal
+        isOpen={mapFrameOpen}
+        onClose={() => setMapFrameOpen(false)}
+        selectedIndicator={selectedIndicator}
+        currentDate={currentDateInfo.thoi_gian}
+        geoDistricts={geoDistricts}
+        khuVucLst={khuVucLst}
+        stations={getStationsWithLST(TRAM_VIEN_THAM_HCM, khuVucLst, lstPoints, currentDateInfo.thoi_gian)}
+      />
     </div>
   );
 }

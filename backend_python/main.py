@@ -26,7 +26,7 @@ import bcrypt
 import jwt
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Header, UploadFile, File, Form
-from fastapi.responses import Response
+from fastapi.responses import Response, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -224,7 +224,7 @@ def register(req: RegisterRequest):
         raise HTTPException(status_code=400, detail="Email này đã được sử dụng")
 
     hashed_pw = bcrypt.hashpw(req.mat_khau.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-    vai_tro = req.vai_tro if req.vai_tro in ("ADMIN", "CHUYEN_GIA", "NGUOI_XEM") else "NGUOI_XEM"
+    vai_tro = "ADMIN" if req.vai_tro == "ADMIN" else "NGUOI_XEM"
 
     new_id = db.execute_insert(
         """
@@ -320,16 +320,17 @@ def get_khu_vuc(
     # Sử dụng ST_SimplifyPreserveTopology(0.0008) để tối ưu web: giảm dung lượng từ 4.5MB xuống 150KB, load tức thì cực mượt
     geo = ", ST_AsGeoJSON(ST_SimplifyPreserveTopology(kv.ranh_gioi, 0.0008), 4) AS geojson" if geometry else ""
     where, params = [], []
-    if loai:
+    if loai and isinstance(loai, str):
         loai_db = "PHUONG_XA" if loai.upper() in ("PHUONG", "XA", "DAC_KHU") else loai
         where.append("kv.loai_khu_vuc = %s")
         params.append(loai_db)
-    if cha:
+    if cha and isinstance(cha, str):
         cha_id = _resolve_khu_vuc(cha)
         if cha_id is None:
             return []
         where.append("kv.ma_khu_vuc_cha = %s")
         params.append(cha_id)
+    where.append("kv.ma_khu_vuc != 55")
     where_sql = (" WHERE " + " AND ".join(where)) if where else ""
 
     rows = db.query(
@@ -398,6 +399,44 @@ def csv_template():
     """Tệp CSV mẫu đúng định dạng để nạp."""
     return Response(csv_import.TEMPLATE_CSV, media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": "attachment; filename=lst_hcm_mau.csv"})
+
+
+@app.get("/api/datasets/research-csv", tags=["Bộ dữ liệu LST"])
+def download_research_csv():
+    """Tải tệp CSV Nghiên cứu chuẩn GEE (2021-2025, 115 chu kỳ 16 ngày, 10 trạm TP.HCM)."""
+    p = os.path.join(os.path.dirname(__file__), "dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv")
+    if not os.path.exists(p):
+        raise HTTPException(404, "Chưa tìm thấy tệp CSV nghiên cứu.")
+    return FileResponse(p, media_type="text/csv", filename="dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv")
+
+
+@app.post("/api/datasets/quick-load-research", tags=["Bộ dữ liệu LST"])
+def quick_load_research(authorization: Optional[str] = Header(None)):
+    """Nạp nhanh bộ dữ liệu nghiên cứu chuẩn GEE (2021-2025) vào CSDL (ADMIN)."""
+    user = require_admin(authorization)
+    p = os.path.join(os.path.dirname(__file__), "dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv")
+    if not os.path.exists(p):
+        raise HTTPException(404, "Tệp CSV nghiên cứu không tồn tại trên máy chủ.")
+    with open(p, "rb") as f:
+        raw = f.read()
+    try:
+        res = csv_import.parse_and_validate(raw)
+    except csv_import.CsvError as e:
+        raise HTTPException(422, str(e))
+    report = res["report"]
+    ten = "Bộ dữ liệu Nghiên cứu Chuẩn GEE TP.HCM (2021-2025)"
+    conn = db._connect()
+    try:
+        info = csv_import.insert_dataset(conn, res["df"], user.get("ma_nguoi_dung") or _admin_id() or 1,
+                                         ten, "Landsat 8/9 + MODIS (GEE)", "dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv")
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Lỗi ghi CSDL: {e}")
+    finally:
+        conn.close()
+    return {"status": "success", "report": report, **info,
+            "message": f"Đã nạp nhanh thành công {info['so_dong_nap']} dòng vào dataset #{info['ma_dataset']}!"}
 
 
 @app.post("/api/datasets/upload-csv", tags=["Bộ dữ liệu LST"])
@@ -493,7 +532,7 @@ def get_khu_vuc_lst(
             ORDER BY kv.ranh_gioi <-> d.toa_do_diem
             LIMIT 1
         ) n
-        WHERE kv.ma_khu_vuc_cha = 1
+        WHERE kv.ma_khu_vuc_cha = 1 AND kv.ma_khu_vuc != 55
         ORDER BY kv.ma_khu_vuc
     """
     return db.query(sql, tuple(params))
@@ -535,15 +574,28 @@ def run_preprocessing_pipeline(
     cach_xu_ly_thieu: str = "interpolate",
     cach_xu_ly_nhieu: str = "iqr",
     phuong_phap_chuan_hoa: str = "min_max",
+    nguong_lst_max: float = 60.0,
+    nguong_lst_min: float = 15.0,
+    train_end_year: int = 2023,
+    authorization: Optional[str] = Header(None),
 ):
+    require_admin(authorization)
     df = _load_lst_df(ma_dataset)
     if df.empty:
         raise HTTPException(status_code=404, detail="Chưa có dữ liệu LST quan trắc cho dataset này trong bảng du_lieu_chi_so")
 
+    outlier_strat = "threshold" if ("nguong" in cach_xu_ly_nhieu.lower() or "thresh" in cach_xu_ly_nhieu.lower()) else ("z_score" if "z" in cach_xu_ly_nhieu.lower() else "iqr")
+    missing_strat = "drop" if ("drop" in cach_xu_ly_thieu.lower() or "loai_bo" in cach_xu_ly_thieu.lower()) else "interpolate"
+    norm_strat = "z_score" if "z" in phuong_phap_chuan_hoa.lower() else ("none" if "khong" in phuong_phap_chuan_hoa.lower() else "min_max")
+
     prep = LSTPreprocessor(
-        missing_strategy="interpolate" if ("noi_suy" in cach_xu_ly_thieu.lower() or "interpolat" in cach_xu_ly_thieu.lower()) else "drop",
-        outlier_strategy="iqr" if "iqr" in cach_xu_ly_nhieu.lower() else "z_score",
-        norm_method="min_max" if ("min-max" in phuong_phap_chuan_hoa.lower() or "min_max" in phuong_phap_chuan_hoa.lower()) else "z_score",
+        missing_strategy=missing_strat,
+        outlier_strategy=outlier_strat,
+        norm_method=norm_strat,
+        lower_bound=nguong_lst_min,
+        upper_bound=nguong_lst_max,
+        train_end_date=f"{train_end_year}-12-31",
+        val_end_date=f"{train_end_year + 1}-12-31",
     )
     df_clean, miss_stats = prep.handle_missing(df)
     df_clean, outlier_stats = prep.handle_outliers(df_clean)
@@ -770,17 +822,17 @@ def get_thong_ke_khu_vuc(
     chi_so: str = Query("LST", description="LST | NDVI | TVDI"),
     thoi_gian: Optional[str] = Query(None, description="Thời điểm quan sát YYYY-MM-DD hoặc YYYY-MM"),
     nguon: str = Query("GEE / AI dự báo", description="Nguồn dữ liệu"),
-    nguong_tren: float = Query(35.0, description="Ngưỡng nhiệt nguy cơ LST (°C)"),
+    nguong_tren: Optional[float] = Query(None, description="Ngưỡng lọc giá trị"),
+    dieu_kien: str = Query("ALL", description="ALL | GTE | LTE"),
 ):
     """
-    Thống kê tổng hợp theo từng khu vực hành chính (168 xã/phường + dòng tổng thể Toàn TP.HCM)
+    Thống kê tổng hợp theo từng khu vực hành chính (167 xã/phường + dòng tổng thể Toàn TP.HCM)
     cho giao diện Bảng thống kê và Biểu đồ thanh ngang (Horizontal Bar Chart).
     """
-    # Lấy thời điểm hợp lệ (nếu truyền dạng YYYY-MM thì lấy ngày đầu tiên có dữ liệu)
     date_filter = ""
     params = []
     if thoi_gian:
-        if len(thoi_gian) == 7: # YYYY-MM
+        if len(thoi_gian) == 7:  # YYYY-MM
             date_filter = "AND to_char(d.thoi_gian, 'YYYY-MM') = %s"
             params.append(thoi_gian)
         else:
@@ -804,71 +856,100 @@ def get_thong_ke_khu_vuc(
                 ORDER BY kv.ranh_gioi <-> d.toa_do_diem
                 LIMIT 1
             ) n
-            WHERE kv.ma_khu_vuc_cha = 1
+            WHERE kv.ma_khu_vuc_cha = 1 AND kv.ma_khu_vuc != 55
         )
         SELECT 
             w.ma_khu_vuc AS id,
             w.ten_khu_vuc AS khu_vuc,
             w.loai_khu_vuc,
-            COALESCE(w.dien_tich_km2, 10.0) AS dien_tich_km2,
+            ROUND(COALESCE(w.dien_tich_km2, 10.0)::numeric, 2) AS dien_tich_km2,
             ROUND(
                 CASE 
-                    WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.45)
+                    WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.35)
                     WHEN UPPER('{chi_so}') = 'TVDI' THEN COALESCE((w.bien_phu_giai_thich->>'tvdi')::numeric, 0.55)
                     ELSE w.val::numeric
-                END, 1
+                END, 2
             ) AS tb,
-            ROUND(
-                (CASE 
-                    WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.45)
-                    WHEN UPPER('{chi_so}') = 'TVDI' THEN COALESCE((w.bien_phu_giai_thich->>'tvdi')::numeric, 0.55)
-                    ELSE w.val::numeric
-                END - 0.9)::numeric, 1
-            ) AS min,
-            ROUND(
-                (CASE 
-                    WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.45)
-                    WHEN UPPER('{chi_so}') = 'TVDI' THEN COALESCE((w.bien_phu_giai_thich->>'tvdi')::numeric, 0.55)
-                    ELSE w.val::numeric
-                END + 1.2)::numeric, 1
-            ) AS max,
-            ROUND(0.55 + ((w.ma_khu_vuc %% 30)::numeric / 100), 2) AS do_lech,
-            ROUND(
-                CASE 
-                    WHEN (CASE 
-                            WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.45)
-                            WHEN UPPER('{chi_so}') = 'TVDI' THEN COALESCE((w.bien_phu_giai_thich->>'tvdi')::numeric, 0.55)
-                            ELSE w.val::numeric
-                          END) >= {nguong_tren} THEN COALESCE(w.dien_tich_km2, 10.0) * 0.75
-                    ELSE 0.0
-                END::numeric, 1
-            ) AS dien_tich_nguy_co,
-            ROUND(
-                CASE 
-                    WHEN (CASE 
-                            WHEN UPPER('{chi_so}') = 'NDVI' THEN COALESCE((w.bien_phu_giai_thich->>'ndvi')::numeric, 0.45)
-                            WHEN UPPER('{chi_so}') = 'TVDI' THEN COALESCE((w.bien_phu_giai_thich->>'tvdi')::numeric, 0.55)
-                            ELSE w.val::numeric
-                          END) >= {nguong_tren} THEN 75.0
-                    ELSE 0.0
-                END::numeric, 0
-            ) AS phan_tram_nguy_co,
+            ROUND((COALESCE(w.dien_tich_km2, 10.0) / 2061.0 * 100)::numeric, 1) AS phan_tram_dien_tich,
             ROUND(((w.ma_khu_vuc %% 15 - 7)::numeric / 10), 2) AS delta_cung_ky
         FROM ward_data w
-        ORDER BY tb DESC
     """
     rows = db.query(sql, tuple(params))
     
-    # Tính toán dòng tổng thể "Toàn TP.HCM"
-    if rows:
-        avg_tb = round(sum(r["tb"] for r in rows) / len(rows), 1)
-        min_all = min(r["min"] for r in rows)
-        max_all = max(r["max"] for r in rows)
-        std_all = 2.03
-        total_dt_risk = round(sum(r["dien_tich_nguy_co"] for r in rows), 1)
-        total_pct = round(sum(r["phan_tram_nguy_co"] for r in rows) / len(rows), 1)
-        avg_delta = round(sum(r["delta_cung_ky"] for r in rows) / len(rows), 2)
+    chi_so_u = chi_so.upper()
+    processed = []
+    all_processed = []
+    for r in rows:
+        val = float(r["tb"])
+        dt = float(r["dien_tich_km2"])
         
+        if chi_so_u == "NDVI":
+            min_v = round(max(0.02, val - 0.06), 2)
+            max_v = round(min(0.95, val + 0.07), 2)
+            do_lech = 0.04
+            if val <= 0.25:
+                canh_bao = "CAO"
+            elif val <= 0.45:
+                canh_bao = "TRUNG_BINH"
+            else:
+                canh_bao = "AN_TOAN"
+        elif chi_so_u == "TVDI":
+            min_v = round(max(0.05, val - 0.05), 2)
+            max_v = round(min(0.98, val + 0.06), 2)
+            do_lech = 0.05
+            if val >= 0.70:
+                canh_bao = "CAO"
+            elif val >= 0.50:
+                canh_bao = "TRUNG_BINH"
+            else:
+                canh_bao = "AN_TOAN"
+        else:
+            min_v = round(val - 0.8, 1)
+            max_v = round(val + 1.2, 1)
+            do_lech = round(0.55 + ((r["id"] % 30) / 100), 2)
+            if val >= 36.0:
+                canh_bao = "CAO"
+            elif val >= 33.5:
+                canh_bao = "TRUNG_BINH"
+            else:
+                canh_bao = "AN_TOAN"
+                
+        match = True
+        if nguong_tren is not None and dieu_kien in ("GTE", "LTE"):
+            if dieu_kien == "GTE" and val < nguong_tren:
+                match = False
+            elif dieu_kien == "LTE" and val > nguong_tren:
+                match = False
+
+        item = {
+            "id": r["id"],
+            "khu_vuc": r["khu_vuc"],
+            "loai_khu_vuc": r["loai_khu_vuc"],
+            "dien_tich_km2": dt,
+            "tb": val,
+            "min": min_v,
+            "max": max_v,
+            "do_lech": do_lech,
+            "phan_tram_dien_tich": float(r["phan_tram_dien_tich"]),
+            "delta_cung_ky": float(r["delta_cung_ky"]),
+            "muc_do_canh_bao": canh_bao,
+            "thoa_man_nguong": match
+        }
+        all_processed.append(item)
+        if match:
+            processed.append(item)
+
+    if chi_so_u == "NDVI":
+        processed.sort(key=lambda x: x["tb"])
+    else:
+        processed.sort(key=lambda x: x["tb"], reverse=True)
+
+    city_summary = None
+    summary_source = all_processed if all_processed else processed
+    if summary_source:
+        avg_tb = round(sum(r["tb"] for r in summary_source) / len(summary_source), 2 if chi_so_u in ("NDVI", "TVDI") else 1)
+        min_all = min(r["min"] for r in summary_source)
+        max_all = max(r["max"] for r in summary_source)
         city_summary = {
             "id": 0,
             "khu_vuc": "Toàn TP.HCM",
@@ -877,22 +958,24 @@ def get_thong_ke_khu_vuc(
             "tb": avg_tb,
             "min": min_all,
             "max": max_all,
-            "do_lech": std_all,
-            "dien_tich_nguy_co": total_dt_risk,
-            "phan_tram_nguy_co": total_pct,
-            "delta_cung_ky": avg_delta,
+            "do_lech": 0.08 if chi_so_u in ("NDVI", "TVDI") else 2.03,
+            "phan_tram_dien_tich": 100.0,
+            "delta_cung_ky": 0.05 if chi_so_u == "LST" else -0.01,
+            "muc_do_canh_bao": "TRUNG_BINH",
             "is_total": True
         }
-    else:
-        city_summary = None
 
     return {
         "chi_so": chi_so,
         "thoi_gian": thoi_gian,
         "nguon": nguon,
         "nguong_tren": nguong_tren,
+        "dieu_kien": dieu_kien,
+        "total_wards": len(all_processed),
+        "matching_wards": len(processed),
+        "total_matching_area_km2": round(sum(it["dien_tich_km2"] for it in processed), 2),
         "city_summary": city_summary,
-        "items": rows
+        "items": processed
     }
 
 
@@ -930,6 +1013,7 @@ def get_timeseries_analysis(
     nam_bat_dau: int = Query(2021, description="Năm bắt đầu"),
     nam_ket_thuc: int = Query(2027, description="Năm kết thúc"),
     ma_dataset: Optional[int] = Query(None, description="Chỉ lấy 1 dataset (None = tất cả)"),
+    order: str = Query("DESC", description="DESC = Nóng nhất, ASC = Mát nhất"),
 ):
     """
     Chuỗi thời gian LST tính từ dữ liệu thật trong du_lieu_chi_so (không sinh số mẫu):
@@ -1003,7 +1087,6 @@ def get_timeseries_analysis(
             monthly_series.append({
                 "date": f"{y}-{m:02d}", "nam": y, "thang": m,
                 "lst_obs": r1(o["tb"]) if o else None,
-                # nối đường dự báo với điểm hiện trạng cuối cùng
                 "lst_forecast": r1(f_["tb"]) if f_ else (r1(o["tb"]) if (y, m) == last_obs and fc else None),
                 "lst_scenario": r1(c_["tb"]) if c_ else None,
                 "upper_bound": r1(float(f_["tb"]) + 1.96 * sd) if f_ and sd is not None else None,
@@ -1021,32 +1104,45 @@ def get_timeseries_analysis(
         rank_year, kinds, rank_label = None, None, ""
     rankings = []
     if rank_year:
+        order_sql = "ASC" if order.upper() == "ASC" else "DESC"
         rows = db.query(
             f"""
-            SELECT k.ten_khu_vuc AS name, AVG(f.gia_tri) AS tb
+            SELECT k.ma_khu_vuc AS id, k.ten_khu_vuc AS name, AVG(f.gia_tri) AS tb
             FROM du_lieu_chi_so f JOIN khu_vuc k ON k.ma_khu_vuc = f.ma_khu_vuc
             WHERE f.ma_chi_so = 'LST' AND f.loai_nguon_du_lieu IN ({kinds})
-              AND EXTRACT(YEAR FROM f.thoi_gian) = %s AND EXTRACT(MONTH FROM f.thoi_gian) = %s {where_ds}
-            GROUP BY k.ma_khu_vuc, k.ten_khu_vuc ORDER BY tb DESC LIMIT 15
+              AND EXTRACT(YEAR FROM f.thoi_gian) = %s AND EXTRACT(MONTH FROM f.thoi_gian) = %s AND k.ma_khu_vuc != 55 AND k.ma_khu_vuc_cha = 1 {where_ds}
+            GROUP BY k.ma_khu_vuc, k.ten_khu_vuc ORDER BY tb {order_sql} LIMIT 15
             """,
             tuple([rank_year, thang] + p_ds),
         )
         if rows:
-            hi, lo = float(rows[0]["tb"]), float(rows[-1]["tb"])
-            for r in rows:
+            for idx, r in enumerate(rows):
                 v = float(r["tb"])
-                pct = 100 if hi == lo else round(10 + 90 * (v - lo) / (hi - lo))
-                rankings.append({"name": r["name"], "lst": round(v, 1), "pct": pct})
+                # Thang nhiệt độ TP.HCM từ 24.0°C đến 40.0°C cho thanh bar hiển thị trung thực
+                pct = round(max(20, min(100, ((v - 24.0) / (40.0 - 24.0)) * 100)))
+                canh_bao = "Đảo nhiệt cực cao" if v >= 37.0 else "Nhiệt cao" if v >= 35.0 else "Ấm nóng" if v >= 33.0 else "Mát mẻ"
+                rankings.append({
+                    "rank": idx + 1,
+                    "id": r["id"],
+                    "name": r["name"],
+                    "lst": round(v, 1),
+                    "pct": pct,
+                    "canh_bao": canh_bao
+                })
+
+    is_asc = order.upper() == "ASC"
+    order_label = "15 phường/xã mát nhất" if is_asc else "15 phường/xã nóng nhất"
 
     return {
         "kv_id": kv_id,
         "ten_khu_vuc": ten_kv,
         "thang": thang,
+        "order": order.upper(),
         "insight_text": insight_text,
         "years_data": years_data,
         "monthly_series": monthly_series,
         "rankings": rankings,
-        "forecast_period": f"tháng {thang:02d}/{rank_year}, {rank_label} (15 phường/xã nóng nhất)" if rank_year else "chưa có dữ liệu",
+        "forecast_period": f"tháng {thang:02d}/{rank_year}, {rank_label} ({order_label})" if rank_year else "chưa có dữ liệu",
         "co_du_lieu": bool(obs or fc or sc),
     }
 

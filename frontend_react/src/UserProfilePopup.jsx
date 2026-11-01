@@ -25,10 +25,8 @@ export default function UserProfilePopup({ user, isOpen, onClose, onLogout }) {
     switch (role) {
       case 'ADMIN':
         return { label: 'Quản trị viên (Admin)', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
-      case 'CHUYEN_GIA':
-        return { label: 'Chuyên gia (Expert)', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
       default:
-        return { label: 'Người xem (Viewer)', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' };
+        return { label: 'Người dùng (Viewer)', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' };
     }
   };
 
