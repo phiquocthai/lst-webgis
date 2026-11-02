@@ -4068,13 +4068,13 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
             {isAdmin ? (
               <div className="role-banner admin">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={20} color="#34d399" />
+                  <ShieldCheck size={20} color="#059669" />
                   <div>
                     <span style={{ fontWeight: 700 }}>Quyền Quản trị viên (ADMIN):</span> Bạn có toàn quyền nạp bộ dữ liệu GEE mới, cấu hình phòng thử tiền xử lý, lưu cấu hình vào CSDL và kích hoạt huấn luyện mô hình AI.
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '11px', background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', padding: '4px 10px', borderRadius: '20px', fontWeight: 700 }}>
+                  <span style={{ fontSize: '11px', background: '#059669', color: '#ffffff', padding: '4px 10px', borderRadius: '20px', fontWeight: 700, boxShadow: '0 1px 3px rgba(5, 150, 105, 0.3)' }}>
                     👑 FULL ACCESS
                   </span>
                 </div>
@@ -4082,7 +4082,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
             ) : (
               <div className="role-banner readonly">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Lock size={20} color="#f59e0b" style={{ flexShrink: 0 }} />
+                  <Lock size={20} color="#d97706" style={{ flexShrink: 0 }} />
                   <div>
                     <span style={{ fontWeight: 700 }}>Chế độ Chỉ xem (Read-only):</span> Bạn đang đăng nhập với vai trò <u>{currentUser ? (currentUser.vai_tro === 'CHUYEN_GIA' ? 'Chuyên gia' : 'Người xem') : 'Khách vãng lai'}</u>. Chỉ tài khoản Quản trị viên (ADMIN) mới được quyền nạp file CSV, lưu cấu hình tiền xử lý và huấn luyện mô hình.
                   </div>
@@ -4103,14 +4103,15 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: prepAlert.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                border: `1px solid ${prepAlert.type === 'success' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
-                color: prepAlert.type === 'success' ? '#a7f3d0' : '#fca5a5'
+                background: prepAlert.type === 'success' ? '#ecfdf5' : '#fef2f2',
+                border: `1.5px solid ${prepAlert.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+                color: prepAlert.type === 'success' ? '#065f46' : '#991b1b',
+                fontWeight: 600
               }}>
                 <span>{prepAlert.msg}</span>
                 <button
                   onClick={() => setPrepAlert(null)}
-                  style={{ background: 'transparent', border: 0, color: 'inherit', cursor: 'pointer', fontSize: '14px' }}
+                  style={{ background: 'transparent', border: 0, color: 'inherit', cursor: 'pointer', fontSize: '14px', fontWeight: 700 }}
                 >
                   ✕
                 </button>
@@ -4124,7 +4125,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
               <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="card-header">
                   <span className="card-title">
-                    <UploadCloud size={16} color="#22d3ee" />
+                    <UploadCloud size={16} color="#0284c7" />
                     1. Nạp bộ dữ liệu CSV từ GEE & Nghiên cứu
                   </span>
                 </div>
@@ -4132,8 +4133,8 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   
                   {/* Research Dataset Feature Card */}
                   <div style={{
-                    background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(6, 182, 212, 0.05))',
-                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                    border: '1px solid #bae6fd',
                     borderRadius: '10px',
                     padding: '12px 14px',
                     display: 'flex',
@@ -4141,16 +4142,16 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     gap: '10px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--accent-sky)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Sparkles size={14} color="#38bdf8" />
+                      <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0369a1', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Sparkles size={14} color="#0284c7" />
                         Tệp CSV Nghiên cứu Chuẩn GEE (2021–2025)
                       </span>
-                      <span style={{ fontSize: '10.5px', background: 'rgba(56, 189, 248, 0.2)', color: '#38bdf8', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                      <span style={{ fontSize: '10.5px', background: '#ffffff', color: '#0284c7', border: '1px solid #7dd3fc', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
                         1,150 dòng · 10 trạm TP.HCM
                       </span>
                     </div>
 
-                    <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.45', margin: 0 }}>
+                    <p style={{ fontSize: '11.5px', color: '#334155', lineHeight: '1.5', margin: 0 }}>
                       Bộ dữ liệu chuẩn hóa viễn thám Landsat 8/9 & MODIS chu kỳ 16 ngày (2021–2025) bao phủ 10 trạm đại diện (Q1, Tân Bình, Thủ Đức, Bình Tân, Q7, Bình Chánh, Củ Chi, Hóc Môn, Bình Thạnh, Cần Giờ) với đầy đủ biến giải thích sinh khí hậu và các hiện tượng mây/nhiễu thực tế.
                     </p>
 
@@ -4174,11 +4175,13 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           style={{
                             fontFamily: 'JetBrains Mono',
                             fontSize: '10px',
-                            padding: '2px 6px',
+                            padding: '3px 7px',
                             borderRadius: '4px',
-                            background: 'rgba(15, 23, 42, 0.8)',
-                            border: '1px solid rgba(56, 189, 248, 0.25)',
-                            color: '#38bdf8'
+                            background: '#ffffff',
+                            border: '1px solid #7dd3fc',
+                            color: '#0284c7',
+                            fontWeight: 600,
+                            boxShadow: '0 1px 2px rgba(2, 132, 199, 0.08)'
                           }}
                         >
                           {item.col}
@@ -4193,13 +4196,17 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         download="dataset_lst_hcm_landsat_modis_2021_2025_nghiencuu.csv"
                         className="btn-primary"
                         style={{
-                          padding: '6px 12px',
+                          padding: '6px 14px',
                           fontSize: '11.5px',
                           textDecoration: 'none',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          fontWeight: 600
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                          color: '#ffffff',
+                          borderRadius: '8px',
+                          boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)'
                         }}
                       >
                         <Download size={13} />
@@ -4211,17 +4218,17 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         onClick={handleQuickLoadResearch}
                         disabled={quickLoadingResearch || !isAdmin}
                         style={{
-                          padding: '6px 12px',
+                          padding: '6px 14px',
                           fontSize: '11.5px',
-                          background: isAdmin ? 'rgba(16, 185, 129, 0.15)' : '#334155',
-                          border: `1px solid ${isAdmin ? 'rgba(16, 185, 129, 0.4)' : '#475569'}`,
-                          color: isAdmin ? '#34d399' : '#94a3b8',
+                          background: isAdmin ? '#ecfdf5' : '#f1f5f9',
+                          border: `1.5px solid ${isAdmin ? '#10b981' : '#cbd5e1'}`,
+                          color: isAdmin ? '#047857' : '#94a3b8',
                           borderRadius: '8px',
                           cursor: isAdmin ? 'pointer' : 'not-allowed',
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          fontWeight: 600
+                          fontWeight: 700
                         }}
                         title={isAdmin ? 'Tự động nạp bộ dữ liệu nghiên cứu này vào CSDL PostgreSQL' : 'Yêu cầu quyền ADMIN'}
                       >
@@ -4257,11 +4264,11 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       Định dạng chuẩn: ngay, kinh_do, vi_do, lst (tối đa 50MB)
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
                       <button
                         type="button"
                         className="btn-primary"
-                        style={{ padding: '5px 12px', fontSize: '11.5px' }}
+                        style={{ padding: '6px 14px', fontSize: '11.5px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', borderRadius: '8px', fontWeight: 700, border: 'none', boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)' }}
                         disabled={uploadingDataset || !isAdmin}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -4279,7 +4286,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       <a
                         href={`${API_BASE}/datasets/csv-template`}
                         onClick={(e) => e.stopPropagation()}
-                        style={{ padding: '5px 12px', fontSize: '11.5px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', color: '#38bdf8', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600, textDecoration: 'none' }}
+                        style={{ padding: '6px 14px', fontSize: '11.5px', background: '#ffffff', border: '1.5px solid #0284c7', color: '#0284c7', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 700, textDecoration: 'none', boxShadow: '0 1px 2px rgba(2, 132, 199, 0.08)' }}
                       >
                         <FileText size={13} />
                         Tải mẫu CSV gốc
@@ -4288,13 +4295,13 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   </div>
 
                   {csvReport && (
-                    <div style={{ fontSize: '11.5px', lineHeight: 1.5, color: 'var(--text-muted)', border: '1px solid rgba(6,182,212,0.3)', borderRadius: '8px', padding: '10px 12px', background: 'rgba(15, 23, 42, 0.6)' }}>
-                      <b style={{ color: 'var(--text-main)' }}>Báo cáo kiểm tra cấu trúc CSV</b><br />
+                    <div style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#1e293b', border: '1.5px solid #cbd5e1', borderRadius: '8px', padding: '10px 12px', background: '#f8fafc' }}>
+                      <b style={{ color: '#0f172a' }}>Báo cáo kiểm tra cấu trúc CSV</b><br />
                       {csvReport.dong_hop_le}/{csvReport.tong_dong} dòng hợp lệ · {csvReport.so_diem} điểm quan sát · {csvReport.ngay_dau} → {csvReport.ngay_cuoi}<br />
                       Nhiệt độ LST: Trung bình {csvReport.lst_tb} °C · Min {csvReport.lst_min} °C · Max {csvReport.lst_max} °C<br />
                       {csvReport.cot_tuy_chon_thieu?.length > 0 && <span>Thiếu cột tùy chọn: {csvReport.cot_tuy_chon_thieu.join(', ')}<br /></span>}
                       {csvReport.dong_bi_loai > 0 && (
-                        <span style={{ color: '#f97316' }}>
+                        <span style={{ color: '#d97706', fontWeight: 600 }}>
                           Đã loại {csvReport.dong_bi_loai} dòng không hợp lệ: {Object.entries(csvReport.ly_do_bi_loai || {}).map(([k, v]) => `${k} (${v})`).join('; ')}
                         </span>
                       )}
@@ -4371,10 +4378,9 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   
                   {/* Real-time reactive explanation */}
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.45', background: 'rgba(15, 23, 42, 0.5)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    Chuỗi LST Landsat 16 ngày tại <b style={{ color: 'var(--accent-sky)' }}>{currentPrepData.cfg.name}</b>: {currentPrepData.cfg.desc}.{' '}
-                    Đã phát hiện <b style={{ color: '#ef4444' }}>{currentPrepData.outlierCount} giá trị nhiễu</b> ({currentPrepData.outlierValues.length > 0 ? currentPrepData.outlierValues.join(', ') : 'Không có'}) và{' '}
-                    <b style={{ color: '#f59e0b' }}>{currentPrepData.missingCount} ô thiếu do mây</b>.
+                  <div style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.5', background: '#f0f9ff', padding: '9px 12px', borderRadius: '8px', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span>Chuỗi LST Landsat 16 ngày tại <b style={{ color: '#0284c7', background: '#e0f2fe', padding: '1px 6px', borderRadius: '4px' }}>{currentPrepData.cfg.name}</b>: {currentPrepData.cfg.desc}.</span>
+                    <span>Đã phát hiện <b style={{ color: '#dc2626', background: '#fee2e2', padding: '1px 6px', borderRadius: '4px' }}>{currentPrepData.outlierCount} giá trị nhiễu</b> ({currentPrepData.outlierValues.length > 0 ? currentPrepData.outlierValues.join(', ') : 'Không có'}) và <b style={{ color: '#d97706', background: '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>{currentPrepData.missingCount} ô thiếu do mây</b>.</span>
                   </div>
 
                   {/* Filter Grid (6 Controls) */}
@@ -4425,7 +4431,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     <div className="prep-filter-field">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <label>Ngưỡng °C</label>
-                        <span style={{ fontSize: '10.5px', color: '#f97316', fontFamily: 'JetBrains Mono' }}>
+                        <span style={{ fontSize: '10.5px', color: '#d97706', fontWeight: 700, fontFamily: 'JetBrains Mono' }}>
                           {prepThreshold} °C
                         </span>
                       </div>
@@ -4437,12 +4443,12 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           step={1}
                           value={prepThreshold}
                           onChange={e => setPrepThreshold(Number(e.target.value))}
-                          style={{ flex: 1, accentColor: '#f97316' }}
+                          style={{ flex: 1, accentColor: '#0284c7' }}
                         />
                         <input
                           type="number"
                           className="prep-input"
-                          style={{ width: '58px', padding: '4px 6px', textAlign: 'center' }}
+                          style={{ width: '62px', padding: '5px 8px', textAlign: 'center', fontWeight: 700, borderColor: '#0284c7', background: '#ffffff', color: '#0f172a' }}
                           value={prepThreshold}
                           onChange={e => setPrepThreshold(Number(e.target.value))}
                           min={35}
@@ -4487,7 +4493,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   }}>
                     {/* Chart Legend */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontStyle: 'italic' }}>
                         {prepOutlier === 'IQR' ? `Khoảng hợp lệ IQR: [${currentPrepData.lowerBound} °C, ${currentPrepData.upperBound} °C]` : (prepOutlier === 'Z-score' ? `Khoảng 3-Sigma: [${currentPrepData.lowerBound} °C, ${currentPrepData.upperBound} °C]` : `Ngưỡng cắt trên: ${currentPrepData.upperBound} °C`)}
                       </span>
                       <div style={{ display: 'flex', gap: '14px', fontSize: '11px' }}>
@@ -4495,11 +4501,11 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                           <span style={{ width: '16px', height: '2px', background: '#38bdf8', display: 'inline-block' }} />
                           Sau xử lý ({prepMissing === 'Loai_bo' ? 'Bỏ khuyết' : 'Nội suy'})
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#94a3b8' }}>
-                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#64748b', display: 'inline-block' }} />
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#cbd5e1' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#94a3b8', display: 'inline-block' }} />
                           Dữ liệu gốc
                         </span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f87171' }}>
                           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block', boxShadow: '0 0 6px #ef4444' }} />
                           Nhiễu đã lọc
                         </span>
@@ -4648,32 +4654,32 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     )}
                   </div>
 
-                  <div style={{ fontSize: '11px', color: 'var(--text-dim)', fontStyle: 'italic' }}>
+                  <div style={{ fontSize: '11.5px', color: '#475569', fontStyle: 'italic' }}>
                     Đỏ: giá trị bị coi là nhiễu rồi xử lý như dữ liệu thiếu. Ngưỡng {currentPrepData.upperBound} °C được xác định theo phương pháp đã chọn.
                   </div>
 
                   {/* 3 Dynamic KPI Cards */}
                   <div className="prep-kpi-row">
-                    <div className="prep-kpi-card" style={{ borderLeft: '3px solid #f59e0b' }}>
-                      <span className="prep-kpi-title">Thiếu (mây)</span>
-                      <span className="prep-kpi-value" style={{ color: '#f59e0b' }}>{currentPrepData.missingCount}</span>
-                      <span className="prep-kpi-desc">
+                    <div className="prep-kpi-card" style={{ background: '#fffbeb', border: '1px solid #fde68a', borderLeft: '4px solid #f59e0b' }}>
+                      <span className="prep-kpi-title" style={{ color: '#b45309' }}>Thiếu (mây)</span>
+                      <span className="prep-kpi-value" style={{ color: '#d97706' }}>{currentPrepData.missingCount}</span>
+                      <span className="prep-kpi-desc" style={{ color: '#78350f' }}>
                         {prepMissing === 'Loai_bo' ? 'Đã loại bỏ khỏi chuỗi' : (prepMissing === 'KNN_Imputer' ? 'KNN chu kỳ mùa' : (prepMissing === 'Spline' ? 'Nội suy Spline bậc 3' : 'Nội suy chuỗi thời gian'))}
                       </span>
                     </div>
 
-                    <div className="prep-kpi-card" style={{ borderLeft: '3px solid #ef4444' }}>
-                      <span className="prep-kpi-title">Nhiễu bị đánh dấu</span>
-                      <span className="prep-kpi-value" style={{ color: '#ef4444' }}>{currentPrepData.outlierCount}</span>
-                      <span className="prep-kpi-desc" title={currentPrepData.outlierValues.join(', ')}>
+                    <div className="prep-kpi-card" style={{ background: '#fff1f2', border: '1px solid #fecdd3', borderLeft: '4px solid #ef4444' }}>
+                      <span className="prep-kpi-title" style={{ color: '#be123c' }}>Nhiễu bị đánh dấu</span>
+                      <span className="prep-kpi-value" style={{ color: '#e11d48' }}>{currentPrepData.outlierCount}</span>
+                      <span className="prep-kpi-desc" style={{ color: '#9f1239' }} title={currentPrepData.outlierValues.join(', ')}>
                         {currentPrepData.outlierValues.length > 0 ? currentPrepData.outlierValues.join(', ') : 'Không có nhiễu'}
                       </span>
                     </div>
 
-                    <div className="prep-kpi-card" style={{ borderLeft: '3px solid #10b981' }}>
-                      <span className="prep-kpi-title">Bản ghi còn lại</span>
-                      <span className="prep-kpi-value" style={{ color: '#10b981' }}>{currentPrepData.cleanCount}</span>
-                      <span className="prep-kpi-desc">
+                    <div className="prep-kpi-card" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderLeft: '4px solid #10b981' }}>
+                      <span className="prep-kpi-title" style={{ color: '#047857' }}>Bản ghi còn lại</span>
+                      <span className="prep-kpi-value" style={{ color: '#059669' }}>{currentPrepData.cleanCount}</span>
+                      <span className="prep-kpi-desc" style={{ color: '#065f46' }}>
                         {prepNorm === 'Min-Max' ? 'Sạch & chuẩn hóa [0, 1]' : (prepNorm === 'Z-score' ? 'Sạch & chuẩn hóa Z-score' : 'Sạch & giữ nguyên °C')}
                       </span>
                     </div>
@@ -4713,39 +4719,42 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                   </div>
                 </div>
 
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6', background: 'rgba(15, 23, 42, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                  <div>
-                    Tham số chuẩn hóa tính trên tập Train: <code style={{ color: '#38bdf8' }}>mean {currentPrepData.trainStats.mean} · std {currentPrepData.trainStats.std} · min {currentPrepData.trainStats.min} · max {currentPrepData.trainStats.max} °C</code>
+                <div style={{ fontSize: '12px', color: '#1e293b', lineHeight: '1.6', background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1.5px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 600, color: '#334155' }}>Tham số chuẩn hóa tính trên tập Train:</span>
+                    <code style={{ background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '4px', border: '1px solid #bae6fd', fontWeight: 700 }}>
+                      mean {currentPrepData.trainStats.mean} · std {currentPrepData.trainStats.std} · min {currentPrepData.trainStats.min} · max {currentPrepData.trainStats.max} °C
+                    </code>
                   </div>
                   {/* Interactive Mini-Calculator */}
-                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', borderTop: '1px dashed rgba(255, 255, 255, 0.1)', paddingTop: '8px' }}>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-dim)' }}>Thử nghiệm nhiệt độ:</span>
+                  <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', borderTop: '1px dashed #cbd5e1', paddingTop: '10px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Thử nghiệm nhiệt độ:</span>
                     <input
                       type="number"
                       step={0.5}
                       value={simTemp}
                       onChange={e => setSimTemp(Number(e.target.value))}
-                      style={{ width: '60px', padding: '3px 6px', background: '#0f172a', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11.5px', textAlign: 'center' }}
+                      style={{ width: '68px', padding: '4px 8px', background: '#ffffff', border: '1.5px solid #0284c7', borderRadius: '6px', color: '#0f172a', fontSize: '12.5px', fontWeight: 700, textAlign: 'center', outline: 'none', boxShadow: '0 0 0 2px rgba(2, 132, 199, 0.15)' }}
                     />
-                    <span style={{ fontSize: '11.5px' }}>
+                    <span style={{ fontSize: '12px', color: '#334155' }}>
                       °C → Sau chuẩn hóa ({prepNorm}):{' '}
-                      <b style={{ color: '#34d399' }}>
+                      <span style={{ background: '#dcfce7', color: '#15803d', border: '1px solid #86efac', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
                         {prepNorm === 'Min-Max'
                           ? (Math.round(((simTemp - currentPrepData.trainStats.min) / (currentPrepData.trainStats.max - currentPrepData.trainStats.min || 1)) * 1000) / 1000)
                           : (prepNorm === 'Z-score'
                             ? `${Math.round(((simTemp - currentPrepData.trainStats.mean) / currentPrepData.trainStats.std) * 1000) / 1000} σ`
                             : `${simTemp} °C`)}
-                      </b>
+                      </span>
                     </span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Mốc kết thúc Train:</span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>Mốc kết thúc Train:</span>
                     <select
                       className="prep-select"
-                      style={{ width: '85px', padding: '5px 8px', fontSize: '11.5px' }}
+                      style={{ width: '90px', padding: '6px 10px', fontSize: '12px' }}
                       value={prepTrainEndYear}
                       onChange={e => setPrepTrainEndYear(e.target.value)}
                     >
@@ -4762,15 +4771,15 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     style={{
                       padding: '7px 14px',
                       fontSize: '12px',
-                      background: 'rgba(56, 189, 248, 0.15)',
-                      border: '1px solid rgba(56, 189, 248, 0.4)',
-                      color: '#38bdf8',
+                      background: '#e0f2fe',
+                      border: '1.5px solid #0284c7',
+                      color: '#0284c7',
                       borderRadius: '8px',
                       cursor: isAdmin ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      fontWeight: 600
+                      fontWeight: 700
                     }}
                     disabled={pipelineLoading || !isAdmin}
                     onClick={handleRunPipelineTest}
@@ -4788,7 +4797,11 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       fontSize: '12px',
                       opacity: isAdmin ? 1 : 0.6,
                       cursor: isAdmin ? 'pointer' : 'not-allowed',
-                      background: isAdmin ? 'linear-gradient(135deg, #0284c7, #0891b2)' : '#334155'
+                      background: isAdmin ? 'linear-gradient(135deg, #0284c7, #0369a1)' : '#94a3b8',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 4px rgba(2, 132, 199, 0.2)'
                     }}
                     disabled={prepSaving || !isAdmin}
                     onClick={handleSaveTienXuLy}
@@ -4809,15 +4822,15 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                     style={{
                       padding: '7px 14px',
                       fontSize: '12px',
-                      background: 'rgba(34, 211, 238, 0.1)',
-                      border: '1px solid rgba(34, 211, 238, 0.3)',
-                      color: '#22d3ee',
+                      background: '#ecfdf5',
+                      border: '1.5px solid #10b981',
+                      color: '#047857',
                       borderRadius: '8px',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '5px',
-                      fontWeight: 600
+                      fontWeight: 700
                     }}
                     onClick={() => setActiveTab('training')}
                   >
@@ -4828,28 +4841,28 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                 {/* Pipeline Execution Card (Live Database Feedback) */}
                 {pipelineReport && (
                   <div style={{
-                    background: 'rgba(16, 185, 129, 0.08)',
-                    border: '1px solid rgba(16, 185, 129, 0.35)',
+                    background: '#ecfdf5',
+                    border: '1.5px solid #6ee7b7',
                     borderRadius: '8px',
                     padding: '10px 14px',
                     fontSize: '11.5px',
                     lineHeight: '1.5',
-                    color: 'var(--text-muted)'
+                    color: '#065f46'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <b style={{ color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <CheckCircle2 size={13} color="#34d399" />
+                      <b style={{ color: '#047857', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <CheckCircle2 size={13} color="#059669" />
                         Kết quả Pipeline Thực nghiệm trên PostgreSQL
                       </b>
-                      <span style={{ fontSize: '10.5px', color: '#a7f3d0' }}>
+                      <span style={{ fontSize: '10.5px', color: '#065f46', fontWeight: 700 }}>
                         Tổng {pipelineReport.data_split?.total_records?.toLocaleString()} dòng
                       </span>
                     </div>
                     <div>
-                      Dòng thiếu: <b>{pipelineReport.missing_stats?.missing_found} ({pipelineReport.missing_stats?.missing_pct}%)</b> · Xử lý: <code style={{ color: '#38bdf8' }}>{pipelineReport.missing_stats?.strategy}</code>
+                      Dòng thiếu: <b>{pipelineReport.missing_stats?.missing_found} ({pipelineReport.missing_stats?.missing_pct}%)</b> · Xử lý: <code style={{ color: '#0284c7', fontWeight: 600 }}>{pipelineReport.missing_stats?.strategy}</code>
                     </div>
                     <div>
-                      Dị thường phát hiện & khử: <b style={{ color: '#f97316' }}>{pipelineReport.outlier_stats?.outliers_detected} bản ghi</b> · Thuật toán: <code style={{ color: '#38bdf8' }}>{pipelineReport.outlier_stats?.strategy}</code>
+                      Dị thường phát hiện & khử: <b style={{ color: '#d97706' }}>{pipelineReport.outlier_stats?.outliers_detected} bản ghi</b> · Thuật toán: <code style={{ color: '#0284c7', fontWeight: 600 }}>{pipelineReport.outlier_stats?.strategy}</code>
                     </div>
                     <div>
                       Phân chia: <b>Train {pipelineReport.data_split?.train_count} · Val {pipelineReport.data_split?.val_count} · Test {pipelineReport.data_split?.test_count}</b> ({pipelineReport.data_split?.split_ratio})
@@ -4865,11 +4878,11 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
               <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="card-title">
-                    <Clock size={16} color="#38bdf8" />
+                    <Clock size={16} color="#0284c7" />
                     Cấu hình đã lưu trong CSDL (TIEN_XU_LY)
                   </span>
                   <button
-                    style={{ background: 'transparent', border: 0, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}
+                    style={{ background: 'transparent', border: 0, color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600 }}
                     onClick={loadTienXuLy}
                     title="Tải lại danh sách"
                   >
@@ -4893,13 +4906,13 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       {tienXuLyList.length > 0 ? (
                         tienXuLyList.map((txl) => (
                           <tr key={txl.ma_tien_xu_ly}>
-                            <td style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, color: 'var(--accent-sky)' }}>
+                            <td style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#0284c7' }}>
                               #{txl.ma_tien_xu_ly}
                             </td>
                             <td>{txl.cach_xu_ly_thieu}</td>
                             <td>{txl.cach_xu_ly_nhieu}</td>
                             <td>
-                              <span style={{ padding: '2px 6px', background: 'rgba(6, 182, 212, 0.15)', borderRadius: '4px', color: '#38bdf8', fontWeight: 600 }}>
+                              <span style={{ padding: '3px 8px', background: '#e0f2fe', borderRadius: '4px', color: '#0284c7', border: '1px solid #bae6fd', fontWeight: 700 }}>
                                 {txl.phuong_phap_chuan_hoa}
                               </span>
                             </td>
@@ -4909,10 +4922,10 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                         ))
                       ) : (
                         <tr>
-                          <td style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, color: 'var(--accent-sky)' }}>#1</td>
+                          <td style={{ fontFamily: 'JetBrains Mono', fontWeight: 700, color: '#0284c7' }}>#1</td>
                           <td>Noi_suy_tuyen_tinh</td>
                           <td>Nguong_hop_ly</td>
-                          <td><span style={{ padding: '2px 6px', background: 'rgba(6, 182, 212, 0.15)', borderRadius: '4px', color: '#38bdf8' }}>Z-score</span></td>
+                          <td><span style={{ padding: '3px 8px', background: '#e0f2fe', borderRadius: '4px', color: '#0284c7', border: '1px solid #bae6fd', fontWeight: 700 }}>Z-score</span></td>
                           <td>2023-12-31</td>
                           <td>2024-12-31</td>
                         </tr>
@@ -4928,7 +4941,7 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
             <div className="glass-panel" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13.5px', fontWeight: 700, color: 'var(--text-main)' }}>
-                  <BookOpen size={16} color="#38bdf8" />
+                  <BookOpen size={16} color="#0284c7" />
                   Sổ tay Khoa học: Tiền xử lý Viễn thám LST & Nghiên cứu Đảo nhiệt Đô thị TP.HCM
                 </div>
                 <div style={{ display: 'flex', gap: '6px' }}>
@@ -4942,14 +4955,15 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
                       type="button"
                       onClick={() => setScienceTab(tab.id)}
                       style={{
-                        padding: '4px 10px',
-                        fontSize: '11px',
+                        padding: '5px 12px',
+                        fontSize: '11.5px',
                         borderRadius: '6px',
-                        border: scienceTab === tab.id ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
-                        background: scienceTab === tab.id ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.6)',
-                        color: scienceTab === tab.id ? '#38bdf8' : 'var(--text-muted)',
+                        border: scienceTab === tab.id ? '1px solid #0284c7' : '1.5px solid #cbd5e1',
+                        background: scienceTab === tab.id ? '#0284c7' : '#f8fafc',
+                        color: scienceTab === tab.id ? '#ffffff' : '#334155',
                         cursor: 'pointer',
-                        fontWeight: scienceTab === tab.id ? 700 : 500,
+                        fontWeight: scienceTab === tab.id ? 700 : 600,
+                        boxShadow: scienceTab === tab.id ? '0 2px 4px rgba(2, 132, 199, 0.25)' : 'none',
                         transition: 'all 0.15s'
                       }}
                     >
@@ -4961,61 +4975,67 @@ export default function App({ initialTab = 'gis', onHome, currentUser, setCurren
 
               {/* Tab 1: Che phủ mây */}
               {scienceTab === 'cloud' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: 'var(--accent-sky)', display: 'block', marginBottom: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12.5px', color: '#1e293b', lineHeight: '1.6' }}>
+                  <div style={{ background: '#f0f9ff', padding: '14px 16px', borderRadius: '10px', border: '1px solid #bae6fd', borderLeft: '4px solid #0284c7', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#0369a1', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <CloudRain size={16} color="#0284c7" />
                       Đặc thù khí hậu nhiệt đới gió mùa tại TP.HCM
                     </b>
                     TP.HCM có 2 mùa rõ rệt: Mùa mưa (tháng 5 đến tháng 10) và mùa khô (tháng 11 đến tháng 4 năm sau). Trong mùa mưa, độ che phủ mây đối lưu nhiệt đạt 60% – 85% trên các cảnh ảnh Landsat 8/9 và MODIS, dẫn đến các pixel khuyết thiếu nghiêm trọng trong chuỗi thời gian quan trắc bề mặt nhiệt.
                   </div>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: '#34d399', display: 'block', marginBottom: '6px' }}>
+                  <div style={{ background: '#f0fdf4', padding: '14px 16px', borderRadius: '10px', border: '1px solid #bbf7d0', borderLeft: '4px solid #10b981', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#047857', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <Sparkles size={16} color="#10b981" />
                       Chiến lược xử lý khuyết thiếu tối ưu
                     </b>
-                    • <b>Nội suy tuyến tính (Linear Interpolation):</b> Phù hợp khi mây che phủ ngắn hạn 1–2 chu kỳ (16–32 ngày).<br />
-                    • <b>K-NN Imputer theo chu kỳ mùa:</b> Tận dụng quan hệ giữa nhiệt độ LST, chỉ số thực vật NDVI và lượng mưa để phục hồi giá trị chính xác cao.<br />
-                    • <b>Loại bỏ (Drop):</b> Dùng khi mục tiêu chỉ huấn luyện trên các quan trắc hoàn toàn không mây.
+                    • <b style={{ color: '#065f46' }}>Nội suy tuyến tính (Linear Interpolation):</b> Phù hợp khi mây che phủ ngắn hạn 1–2 chu kỳ (16–32 ngày).<br />
+                    • <b style={{ color: '#065f46' }}>K-NN Imputer theo chu kỳ mùa:</b> Tận dụng quan hệ giữa nhiệt độ LST, chỉ số thực vật NDVI và lượng mưa để phục hồi giá trị chính xác cao.<br />
+                    • <b style={{ color: '#065f46' }}>Loại bỏ (Drop):</b> Dùng khi mục tiêu chỉ huấn luyện trên các quan trắc hoàn toàn không mây.
                   </div>
                 </div>
               )}
 
               {/* Tab 2: Nhiễu bức xạ */}
               {scienceTab === 'outlier' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: '#ef4444', display: 'block', marginBottom: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12.5px', color: '#1e293b', lineHeight: '1.6' }}>
+                  <div style={{ background: '#fff1f2', padding: '14px 16px', borderRadius: '10px', border: '1px solid #fecdd3', borderLeft: '4px solid #ef4444', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#be123c', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <Zap size={16} color="#ef4444" />
                       Bản chất vật lý của các điểm dị thường (150 °C, -8 °C, 82 °C)
                     </b>
-                    • <b>Nhiễu cực đại (150 °C, 82 °C):</b> Hiện tượng phản xạ gương mặt trời (specular solar reflection) từ các cụm mái tôn mạ kẽm nhà xưởng (KCN Tân Bình, Bình Tân) và hiện tượng bão hòa kênh hồng ngoại nhiệt TIRS Landsat Band 10 (&gt; 330 K).<br />
-                    • <b>Nhiễu cực tiểu (-8 °C):</b> Do đỉnh mây dông vũ tích lạnh tầng cao hoặc bóng mây che phủ viễn thám bị thuật toán phân loại gán nhầm là nhiệt độ đất.
+                    • <b style={{ color: '#9f1239' }}>Nhiễu cực đại (150 °C, 82 °C):</b> Hiện tượng phản xạ gương mặt trời (specular solar reflection) từ các cụm mái tôn mạ kẽm nhà xưởng (KCN Tân Bình, Bình Tân) và hiện tượng bão hòa kênh hồng ngoại nhiệt TIRS Landsat Band 10 (&gt; 330 K).<br />
+                    • <b style={{ color: '#9f1239' }}>Nhiễu cực tiểu (-8 °C):</b> Do đỉnh mây dông vũ tích lạnh tầng cao hoặc bóng mây che phủ viễn thám bị thuật toán phân loại gán nhầm là nhiệt độ đất.
                   </div>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: '#f59e0b', display: 'block', marginBottom: '6px' }}>
+                  <div style={{ background: '#fffbeb', padding: '14px 16px', borderRadius: '10px', border: '1px solid #fde68a', borderLeft: '4px solid #f59e0b', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <Sliders size={16} color="#f59e0b" />
                       Thuật toán khử nhiễu khoa học
                     </b>
-                    • <b>Ngưỡng hợp lý viễn thám:</b> Thiết lập khoảng nhiệt độ vật lý khả dĩ tại mặt đất đô thị nhiệt đới TP.HCM: [15.0 °C, 55–60 °C]. Mọi điểm ngoài khoảng đều quy về dữ liệu thiếu để nội suy lại.<br />
-                    • <b>Khoảng tứ phân vị (IQR 1.5x):</b> Nhận diện ngoại lai phi tham số, thích ứng linh hoạt theo từng tiểu vùng sinh thái.<br />
-                    • <b>Z-Score (&gt; 3.0 std):</b> Khử các độ lệch thống kê vượt quá 3 độ lệch chuẩn 3-Sigma.
+                    • <b style={{ color: '#78350f' }}>Ngưỡng hợp lý viễn thám:</b> Thiết lập khoảng nhiệt độ vật lý khả dĩ tại mặt đất đô thị nhiệt đới TP.HCM: [15.0 °C, 55–60 °C]. Mọi điểm ngoài khoảng đều quy về dữ liệu thiếu để nội suy lại.<br />
+                    • <b style={{ color: '#78350f' }}>Khoảng tứ phân vị (IQR 1.5x):</b> Nhận diện ngoại lai phi tham số, thích ứng linh hoạt theo từng tiểu vùng sinh thái.<br />
+                    • <b style={{ color: '#78350f' }}>Z-Score (&gt; 3.0 std):</b> Khử các độ lệch thống kê vượt quá 3 độ lệch chuẩn 3-Sigma.
                   </div>
                 </div>
               )}
 
               {/* Tab 3: Chống rò rỉ dữ liệu */}
               {scienceTab === 'norm' && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: '#f43f5e', display: 'block', marginBottom: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '12.5px', color: '#1e293b', lineHeight: '1.6' }}>
+                  <div style={{ background: '#fff1f2', padding: '14px 16px', borderRadius: '10px', border: '1px solid #fecdd3', borderLeft: '4px solid #e11d48', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#be123c', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <ShieldAlert size={16} color="#e11d48" />
                       Sai lầm phổ biến: Rò rỉ dữ liệu (Data Leakage)
                     </b>
                     Nếu lập trình viên chuẩn hóa toàn bộ chuỗi thời gian (2021–2025) bằng Min/Max chung trước khi chia tập, thông tin nhiệt độ tương lai của năm 2024–2025 sẽ bị "rò rỉ" vào tập huấn luyện. Điều này làm cho các chỉ số MAE, RMSE của mô hình AI đẹp một cách giả tạo nhưng sẽ dự báo sai khi triển khai thực tế.
                   </div>
-                  <div style={{ background: 'rgba(15, 23, 42, 0.5)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <b style={{ color: '#10b981', display: 'block', marginBottom: '6px' }}>
+                  <div style={{ background: '#f0fdf4', padding: '14px 16px', borderRadius: '10px', border: '1px solid #bbf7d0', borderLeft: '4px solid #059669', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <b style={{ color: '#047857', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '13px' }}>
+                      <CheckCircle2 size={16} color="#059669" />
                       Nguyên tắc vàng Machine Learning chuỗi thời gian
                     </b>
-                    • <b>Fit duy nhất trên tập Train (2021–2023):</b> Tính toán <code style={{ color: '#38bdf8' }}>min_train, max_train, mean_train, std_train</code> chỉ từ dữ liệu quá khứ.<br />
-                    • <b>Transform tập Val (2024) và Test (2025):</b> Sử dụng lại chính các tham số của Train để chuẩn hóa dữ liệu tương lai mà không cập nhật lại tham số.<br />
-                    • <b>Đảm bảo tính chân thực:</b> Mô hình được kiểm tra trong môi trường "mù hoàn toàn" về tương lai.
+                    • <b style={{ color: '#065f46' }}>Fit duy nhất trên tập Train (2021–2023):</b> Tính toán <code style={{ background: '#e0f2fe', color: '#0284c7', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>min_train, max_train, mean_train, std_train</code> chỉ từ dữ liệu quá khứ.<br />
+                    • <b style={{ color: '#065f46' }}>Transform tập Val (2024) và Test (2025):</b> Sử dụng lại chính các tham số của Train để chuẩn hóa dữ liệu tương lai mà không cập nhật lại tham số.<br />
+                    • <b style={{ color: '#065f46' }}>Đảm bảo tính chân thực:</b> Mô hình được kiểm tra trong môi trường "mù hoàn toàn" về tương lai.
                   </div>
                 </div>
               )}
